@@ -22,12 +22,6 @@ provider "proxmox" {
   }
 }
 
-variable "vm_count" {
-  description = "Anzahl der zu erstellenden VMs"
-  type        = number
-  default     = 1
-}
-
 # Clone VM ressource from template
 resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   count = var.vm_count
@@ -38,7 +32,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   
   # Clone template
   clone {
-    vm_id = 9000  # ID of template-VM in Proxmox
+    vm_id = var.template_id  # ID of template-VM in Proxmox
     full  = true
   }
   
@@ -55,27 +49,27 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   # If not set, the template values will be used
   
   # CPU (optional - overrides template)
-  # cpu {
-  #   cores = 2
-  #   sockets = 1
-  #   type = "host"
-  # }
+  cpu {
+    cores = var.cores
+    sockets = 1
+    type = "host"
+  }
   
   # Memory (optional - overrides template)
-  # memory {
-  #   dedicated = 2048
-  # }
+  memory {
+    dedicated = var.memory
+  }
   
   # Disk (optional - overrides or extends template disk)
-  # disk {
-  #   datastore_id = "local-lvm"
-  #   interface    = "scsi0"
-  #   size         = 20
-  #   file_format  = "raw"
-  #   discard      = "on"
-  #   ssd          = true
-  #   iothread     = true
-  # }
+  disk {
+    datastore_id = var.storage_pool
+    interface    = "scsi0"
+    size         = var.disk_size
+    file_format  = "raw"
+    discard      = "on"
+    ssd          = true
+    iothread     = true # Improves I/O performance
+  }
   
   # Network (optional - overrides template)
   # network_device {
@@ -109,11 +103,11 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
     # }
     
     # User-Account (optional)
-    # user_account {
-    #   username = "ubuntu"
-    #   password = var.vm_password
-    #   keys     = var.ssh_public_key != "" ? [var.ssh_public_key] : []
-    # }
+    user_account {
+      username = var.vm_username
+      password = var.vm_password
+      keys     = var.ssh_public_key != "" ? [var.ssh_public_key] : []
+    }
     
     # Datastore for Cloud-Init disk
     # datastore_id = "local-lvm"
@@ -139,6 +133,8 @@ output "vm_names" {
 }
 
 output "vm_ips" {
-  description = "IP addresses of VMs (if available via Proxmox Agent)"
-  value       = [for vm in proxmox_virtual_environment_vm.ubuntu_vm : try(vm.ipv4_addresses[1][0], "N/A")]
+  description = "IP addresses of VMs (requires VM to be started and agent running)"
+  value       = [for vm in proxmox_virtual_environment_vm.ubuntu_vm : 
+    vm.started ? try(vm.ipv4_addresses[1][0], "Not available yet") : "VM not started"
+  ]
 }
