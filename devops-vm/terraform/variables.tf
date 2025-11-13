@@ -15,16 +15,16 @@ variable "proxmox_api_token_secret" {
   sensitive   = true
 }
 
-variable "ssh_public_key" {
-  description = "SSH Public Key für Cloud-Init"
-  type        = string
-  default     = ""
+variable "vm_count" {
+  description = "Anzahl der zu erstellenden VMs"
+  type        = number
+  default     = 1
 }
 
-variable "template_name" {
-  description = "Name of the VM template to clone from"
+variable "vm_name" {
+  description = "Name of the VM to be created"
   type        = string
-  default     = "ubuntu-cloud-template"
+  default     = "devops-vm"
 }
 
 variable "target_node" {
@@ -32,10 +32,29 @@ variable "target_node" {
   type        = string
 }
 
-variable "vm_name" {
-  description = "Name of the VM to be created"
+variable "template_id" {
+  description = "Template VM ID"
+  type        = number
+  default     = 7000
+}
+
+variable "vm_username" {
+  description = "Name of the user to be created"
   type        = string
-  default     = "devops-vm"
+  default     = "ubuntu"
+}
+
+variable "vm_password" {
+  description = "Password for VM user (for console/GUI access)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "ssh_public_key" {
+  description = "SSH Public Key für Cloud-Init"
+  type        = string
+  default     = ""
 }
 
 variable "vm_description" {
@@ -57,9 +76,9 @@ variable "cores" {
 }
 
 variable "disk_size" {
-  description = "Disk size in GB (must end with G, M, or K)"
+  description = "Disk size in GB"
   type        = string
-  default     = "32G"
+  default     = "32"
 }
 
 variable "storage_pool" {
