@@ -35,7 +35,7 @@ variable "target_node" {
 variable "template_id" {
   description = "Template VM ID"
   type        = number
-  default     = 7000
+  default     = 999
 }
 
 variable "vm_username" {
@@ -66,19 +66,19 @@ variable "vm_description" {
 variable "memory" {
   description = "Amount of memory in MB"
   type        = number
-  default     = 4096
+  default     = 12288
 }
 
 variable "cores" {
   description = "Number of CPU cores"
   type        = number
-  default     = 2
+  default     = 6
 }
 
 variable "disk_size" {
   description = "Disk size in GB"
   type        = string
-  default     = "32"
+  default     = "50"
 }
 
 variable "storage_pool" {
@@ -90,5 +90,5 @@ variable "storage_pool" {
 variable "vmid" {
   description = "The ID for the VM in Proxmox (must be unique)"
   type        = number
-  default     = 200  # You might want to override this in your tfvars file
+  default     = 0  # You might want to override this in your tfvars file
 }
