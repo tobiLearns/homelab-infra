@@ -4,7 +4,7 @@
 
 - name: Remove all snap packages
   shell: snap list | awk 'NR>1 {print $1}' | xargs -r -n1 snap remove --purge
-  ignore_errors: yes
+  ignore_errors: true
   failed_when: false
 
 - name: Remove snapd completely
@@ -13,8 +13,8 @@
       - snapd
       - gnome-software-plugin-snap
     state: absent
-    purge: yes
-  ignore_errors: yes
+    purge: true
+  ignore_errors: true
 
 - name: Remove snap directories
   file:
@@ -26,13 +26,13 @@
     - /var/lib/snapd
     - /var/cache/snapd
     - /usr/lib/snapd
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Hold snapd package (prevent reinstall)
   dpkg_selections:
     name: snapd
     selection: hold
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Add Mozilla Team PPA (native Firefox alternative to snap)
   apt_repository:
@@ -57,4 +57,4 @@
 
 - name: Update apt cache after adding PPAs
   apt:
-    update_cache: yes
+    update_cache: true

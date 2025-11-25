@@ -5,7 +5,7 @@
 
 - name: Setup DevOps Workstation
   hosts: all
-  become: yes
+  become: true
 
   vars:
     user_home: "/home/{{ workstation_user }}"
@@ -28,7 +28,7 @@
     # ============================================
     - name: Update apt cache
       apt:
-        update_cache: yes
+        update_cache: true
         cache_valid_time: 3600
 
     # ============================================
@@ -92,7 +92,7 @@
     - name: Enable LightDM display manager (but don't start yet)
       systemd:
         name: lightdm
-        enabled: yes
+        enabled: true
       # Nicht starten - erst beim Reboot!
 
     - name: Set graphical target as default
@@ -100,7 +100,7 @@
         src: /lib/systemd/system/graphical.target
         dest: /etc/systemd/system/default.target
         state: link
-        force: yes
+        force: true
 
     - name: Install VNC Server
       apt:
@@ -173,13 +173,13 @@
 
     - name: Reload systemd daemon
       systemd:
-        daemon_reload: yes
+        daemon_reload: true
       when: enable_vnc
 
     - name: Enable and start VNC service
       systemd:
         name: "vncserver@1"
-        enabled: yes
+        enabled: true
         state: started
       when: enable_vnc
 
@@ -225,7 +225,7 @@
       apt:
         name: terraform
         state: present
-        update_cache: yes
+        update_cache: true
 
     # ============================================
     # 5. ANSIBLE
@@ -266,18 +266,18 @@
           - containerd.io
           - docker-compose-plugin
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Add user to docker group
       user:
         name: "{{ workstation_user }}"
         groups: docker
-        append: yes
+        append: true
 
     - name: Enable Docker service
       systemd:
         name: docker
-        enabled: yes
+        enabled: true
         state: started
 
     # ============================================
@@ -298,7 +298,7 @@
       apt:
         name: kubectl
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Install Helm
       shell: |
@@ -310,7 +310,7 @@
       unarchive:
         src: https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
         dest: /usr/local/bin/
-        remote_src: yes
+        remote_src: true
         creates: /usr/local/bin/k9s
 
     - name: Create .kube directory
@@ -340,7 +340,7 @@
       apt:
         name: code
         state: present
-        update_cache: yes
+        update_cache: true
       when: install_vscode
 
     - name: Install VS Code extensions
@@ -354,7 +354,7 @@
       become_user: "{{ workstation_user }}"
       environment:
         HOME: "{{ user_home }}"
-      ignore_errors: yes
+      ignore_errors: true
       when: install_vscode
 
     # ============================================
@@ -377,7 +377,7 @@
       unarchive:
         src: "/tmp/intellij.tar.gz"
         dest: /opt/intellij
-        remote_src: yes
+        remote_src: true
         extra_opts: [--strip-components=1]
         creates: /opt/intellij/bin/idea.sh
       when: install_intellij
@@ -441,7 +441,7 @@
           # Colored prompt
           export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
         marker: "# {mark} ANSIBLE MANAGED"
-        create: yes
+        create: true
         owner: "{{ workstation_user }}"
 
     - name: Configure vim
@@ -695,7 +695,7 @@
       lineinfile:
         path: /etc/security/limits.conf
         line: "{{ item }}"
-        create: yes
+        create: true
       loop:
         - "* soft memlock unlimited"
         - "* hard memlock unlimited"
