@@ -317,9 +317,9 @@
             mode: '0755'
 
         - name: Run Helm installation script
-          shell: /tmp/get-helm-3
-      args:
-        creates: /usr/local/bin/helm
+          command: /tmp/get-helm-3
+          args:
+            creates: /usr/local/bin/helm
 
     - name: Download and install k9s
       unarchive:
