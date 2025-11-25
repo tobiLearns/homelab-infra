@@ -7,7 +7,7 @@ set -e  # Exit on error
 # === CONFIGURATION ===
 PROXMOX_HOST="proxmox"
 PROXMOX_USER="root"
-VM_ID=7000
+VM_ID=999
 TEMPLATE_NAME="template-vm-ubuntu-2204-script"
 STORAGE="local-lvm"
 IMAGE_CACHE_DIR="${HOME}/.cache/proxmox-templates"
