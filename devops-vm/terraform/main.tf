@@ -76,6 +76,11 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
     iothread     = true # Improves I/O performance
   }
   
+  vga {
+    type = "virtio"
+    memory = 256  # Optional, ist eh Default bei VirtIO
+  }
+  
   # Network (optional - overrides template)
   # network_device {
   #   bridge = "vmbr0"
