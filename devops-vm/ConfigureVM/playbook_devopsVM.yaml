@@ -35,7 +35,8 @@
     # SNAP REMOVAL & ALTERNATIVE REPOS (moved to role)
     # (Can be removed as a block if snap is desired)
     # ============================================
-    - import_role:
+    - name: Remove snap and configure PPAs
+      import_role:
         name: snap_removal
     # ============================================
 
