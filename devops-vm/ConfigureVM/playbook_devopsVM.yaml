@@ -117,6 +117,7 @@
       when: enable_vnc
 
     - name: Setup VNC for user
+      when: enable_vnc
       block:
         - name: Create VNC directory
           file:
@@ -148,7 +149,6 @@
               exec startxfce4
             owner: "{{ workstation_user }}"
             mode: '0755'
-      when: enable_vnc
 
     - name: Create VNC systemd service
       copy:
