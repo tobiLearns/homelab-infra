@@ -131,6 +131,7 @@
             echo "{{ vnc_password }}" | vncpasswd -f > {{ user_home }}/.vnc/passwd
           args:
             creates: "{{ user_home }}/.vnc/passwd"
+          become: true
           become_user: "{{ workstation_user }}"
 
         - name: Set VNC password permissions
@@ -211,6 +212,7 @@
         - { name: 'user.email', value: "{{ git_user_email }}" }
         - { name: 'init.defaultBranch', value: 'main' }
         - { name: 'pull.rebase', value: 'false' }
+      become: true
       become_user: "{{ workstation_user }}"
 
     # ============================================
@@ -357,6 +359,7 @@
         - ms-azuretools.vscode-docker
         - ms-kubernetes-tools.vscode-kubernetes-tools
         - eamodio.gitlens
+      become: true
       become_user: "{{ workstation_user }}"
       environment:
         HOME: "{{ user_home }}"
