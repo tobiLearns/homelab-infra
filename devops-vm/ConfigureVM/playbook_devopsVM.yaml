@@ -1,0 +1,787 @@
+---
+# devops-workstation-playbook.yml
+# Minimales Setup für DevOps-Arbeit mit Desktop
+# KEIN Node.js, KEIN ML-Zeug, nur IaC-fokussiert
+
+- name: Setup DevOps Workstation
+  hosts: all
+  become: yes
+  
+  vars:
+    user_home: "/home/{{ workstation_user }}"
+    
+    # IDE Configuration
+    install_intellij: true
+    install_vscode: true
+    intellij_version: "2024.2.4"
+    
+    # VNC Configuration (Backup-Zugriff)
+    enable_vnc: true
+
+  tasks:
+    # ============================================
+    # 1. SYSTEM BASICS
+    # ============================================
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+    
+    # ============================================
+    # SNAP REMOVAL & ALTERNATIVE REPOS
+    # (Can be removed as a block if snap is desired)
+    # ============================================
+    - name: Remove all snap packages
+      shell: snap list | awk 'NR>1 {print $1}' | xargs -r -n1 snap remove --purge
+      ignore_errors: yes
+      failed_when: false
+    
+    - name: Remove snapd completely
+      apt:
+        name:
+          - snapd
+          - gnome-software-plugin-snap
+        state: absent
+        purge: yes
+      ignore_errors: yes
+    
+    - name: Remove snap directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /snap
+        - /var/snap
+        - /var/lib/snapd
+        - /var/cache/snapd
+        - /usr/lib/snapd
+      ignore_errors: yes
+    
+    - name: Hold snapd package (prevent reinstall)
+      dpkg_selections:
+        name: snapd
+        selection: hold
+      ignore_errors: yes
+    
+    - name: Add Mozilla Team PPA (native Firefox alternative to snap)
+      apt_repository:
+        repo: ppa:mozillateam/ppa
+        state: present
+    
+    - name: Set Firefox PPA priority
+      copy:
+        dest: /etc/apt/preferences.d/mozilla-firefox
+        content: |
+          Package: *
+          Pin: release o=LP-PPA-mozillateam
+          Pin-Priority: 1001
+        mode: '0644'
+    
+    - name: Configure unattended upgrades for Firefox
+      copy:
+        dest: /etc/apt/apt.conf.d/51unattended-upgrades-firefox
+        content: |
+          Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:${distro_codename}";
+        mode: '0644'
+    
+    - name: Update apt cache after adding PPAs
+      apt:
+        update_cache: yes
+    # ============================================
+    # END SNAP REMOVAL & ALTERNATIVE REPOS
+    # ============================================
+    
+    - name: Install essential packages
+      apt:
+        name:
+          - build-essential
+          - curl
+          - wget
+          - git
+          - vim
+          - tmux
+          - htop
+          - tree
+          - jq
+          - unzip
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - software-properties-common
+        state: present
+    
+    # ============================================
+    # USER CONFIGURATION
+    # ============================================
+    - name: Set proper display name for user (fix screensaver display)
+      user:
+        name: "{{ workstation_user }}"
+        comment: "{{ workstation_user }}"
+        state: present
+    
+    # ============================================
+    # 2. DESKTOP ENVIRONMENT (XFCE)
+    # ============================================
+    - name: Install XFCE Desktop and applications
+      apt:
+        name:
+          - xfce4
+          - xfce4-goodies
+          - xfce4-terminal
+          - lightdm
+          - firefox          # Will use Mozilla PPA if configured above
+          - thunar
+          - mousepad
+          - gnome-themes-extra
+        state: present
+    
+    - name: Set LightDM as default display manager
+      copy:
+        dest: /etc/X11/default-display-manager
+        content: "/usr/sbin/lightdm\n"
+        mode: '0644'
+    
+    - name: Enable LightDM display manager (but don't start yet)
+      systemd:
+        name: lightdm
+        enabled: yes
+      # Nicht starten - erst beim Reboot!
+    
+    - name: Set graphical target as default
+      file:
+        src: /lib/systemd/system/graphical.target
+        dest: /etc/systemd/system/default.target
+        state: link
+        force: yes
+    
+    - name: Install VNC Server
+      apt:
+        name:
+          - tigervnc-standalone-server
+          - tigervnc-common
+        state: present
+      when: enable_vnc
+    
+    - name: Setup VNC for user
+      block:
+        - name: Create VNC directory
+          file:
+            path: "{{ user_home }}/.vnc"
+            state: directory
+            owner: "{{ workstation_user }}"
+            mode: '0755'
+        
+        - name: Set VNC password
+          shell: |
+            echo "{{ vnc_password }}" | vncpasswd -f > {{ user_home }}/.vnc/passwd
+          args:
+            creates: "{{ user_home }}/.vnc/passwd"
+          become_user: "{{ workstation_user }}"
+        
+        - name: Set VNC password permissions
+          file:
+            path: "{{ user_home }}/.vnc/passwd"
+            mode: '0600'
+            owner: "{{ workstation_user }}"
+        
+        - name: Create VNC xstartup
+          copy:
+            dest: "{{ user_home }}/.vnc/xstartup"
+            content: |
+              #!/bin/bash
+              unset SESSION_MANAGER
+              unset DBUS_SESSION_BUS_ADDRESS
+              exec startxfce4
+            owner: "{{ workstation_user }}"
+            mode: '0755'
+      when: enable_vnc
+    
+    - name: Create VNC systemd service
+      copy:
+        dest: /etc/systemd/system/vncserver@.service
+        content: |
+          [Unit]
+          Description=Start TigerVNC server at startup
+          After=syslog.target network.target
+          
+          [Service]
+          Type=forking
+          User={{ workstation_user }}
+          Group={{ workstation_user }}
+          WorkingDirectory={{ user_home }}
+          
+          ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
+          ExecStart=/usr/bin/vncserver -depth 24 -geometry 1920x1080 -localhost no :%i
+          ExecStop=/usr/bin/vncserver -kill :%i
+          
+          # Auto-Restart bei Crash oder Logout
+          Restart=always
+          RestartSec=5
+          
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+      when: enable_vnc
+    
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      when: enable_vnc
+    
+    - name: Enable and start VNC service
+      systemd:
+        name: "vncserver@1"
+        enabled: yes
+        state: started
+      when: enable_vnc
+    
+    # ============================================
+    # 3. GIT & VERSION CONTROL
+    # ============================================
+    - name: Install Git tools
+      apt:
+        name:
+          - git
+          - git-lfs
+          - gitk
+          - meld
+        state: present
+    
+    - name: Configure Git
+      community.general.git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: global
+      loop:
+        - { name: 'user.name', value: "{{ git_user_name }}" }
+        - { name: 'user.email', value: "{{ git_user_email }}" }
+        - { name: 'init.defaultBranch', value: 'main' }
+        - { name: 'pull.rebase', value: 'false' }
+      become_user: "{{ workstation_user }}"
+    
+    # ============================================
+    # 4. TERRAFORM
+    # ============================================
+    - name: Add HashiCorp GPG key
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+    
+    - name: Add HashiCorp repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        state: present
+        filename: hashicorp
+    
+    - name: Install Terraform
+      apt:
+        name: terraform
+        state: present
+        update_cache: yes
+    
+    # ============================================
+    # 5. ANSIBLE
+    # ============================================
+    - name: Install Python for Ansible
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+    
+    - name: Install Ansible via pip
+      pip:
+        name:
+          - ansible
+          - ansible-lint
+        executable: pip3
+    
+    # ============================================
+    # 6. DOCKER
+    # ============================================
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+    
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+    
+    - name: Add user to docker group
+      user:
+        name: "{{ workstation_user }}"
+        groups: docker
+        append: yes
+    
+    - name: Enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+    
+    # ============================================
+    # 7. KUBERNETES CLI TOOLS
+    # ============================================
+    - name: Add Kubernetes GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        state: present
+    
+    - name: Add Kubernetes repository
+      apt_repository:
+        repo: "deb https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+        state: present
+        filename: kubernetes
+    
+    - name: Install kubectl
+      apt:
+        name: kubectl
+        state: present
+        update_cache: yes
+    
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+    
+    - name: Download and install k9s
+      unarchive:
+        src: https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
+        dest: /usr/local/bin/
+        remote_src: yes
+        creates: /usr/local/bin/k9s
+    
+    - name: Create .kube directory
+      file:
+        path: "{{ user_home }}/.kube"
+        state: directory
+        owner: "{{ workstation_user }}"
+        mode: '0700'
+    
+    # ============================================
+    # 8. VS CODE
+    # ============================================
+    - name: Add Microsoft GPG key
+      apt_key:
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+      when: install_vscode
+    
+    - name: Add VS Code repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main"
+        state: present
+        filename: vscode
+      when: install_vscode
+    
+    - name: Install VS Code
+      apt:
+        name: code
+        state: present
+        update_cache: yes
+      when: install_vscode
+    
+    - name: Install VS Code extensions
+      command: code --install-extension {{ item }}
+      loop:
+        - hashicorp.terraform
+        - redhat.ansible
+        - ms-azuretools.vscode-docker
+        - ms-kubernetes-tools.vscode-kubernetes-tools
+        - eamodio.gitlens
+      become_user: "{{ workstation_user }}"
+      environment:
+        HOME: "{{ user_home }}"
+      ignore_errors: yes
+      when: install_vscode
+    
+    # ============================================
+    # 9. INTELLIJ IDEA
+    # ============================================
+    - name: Create IntelliJ directory
+      file:
+        path: /opt/intellij
+        state: directory
+        mode: '0755'
+      when: install_intellij
+    
+    - name: Download IntelliJ IDEA
+      get_url:
+        url: "https://download.jetbrains.com/idea/ideaIC-{{ intellij_version }}.tar.gz"
+        dest: "/tmp/intellij.tar.gz"
+      when: install_intellij
+    
+    - name: Extract IntelliJ
+      unarchive:
+        src: "/tmp/intellij.tar.gz"
+        dest: /opt/intellij
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+        creates: /opt/intellij/bin/idea.sh
+      when: install_intellij
+    
+    - name: Create IntelliJ desktop entry
+      copy:
+        dest: /usr/share/applications/intellij-idea.desktop
+        content: |
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=IntelliJ IDEA
+          Icon=/opt/intellij/bin/idea.png
+          Exec=/opt/intellij/bin/idea.sh %f
+          Comment=Java IDE
+          Categories=Development;IDE;
+          Terminal=false
+        mode: '0644'
+      when: install_intellij
+    
+    - name: Create IntelliJ symlink
+      file:
+        src: /opt/intellij/bin/idea.sh
+        dest: /usr/local/bin/idea
+        state: link
+      when: install_intellij
+    
+    # ============================================
+    # 10. USER CONFIGURATION
+    # ============================================
+    - name: Create workspace directories
+      file:
+        path: "{{ user_home }}/{{ item }}"
+        state: directory
+        owner: "{{ workstation_user }}"
+        mode: '0755'
+      loop:
+        - workspace
+        - workspace/terraform
+        - workspace/ansible
+        - workspace/kubernetes
+        - workspace/scripts
+    
+    - name: Configure bash aliases
+      blockinfile:
+        path: "{{ user_home }}/.bashrc"
+        block: |
+          # DevOps aliases
+          alias tf='terraform'
+          alias tfp='terraform plan'
+          alias tfa='terraform apply'
+          alias tfd='terraform destroy'
+          alias k='kubectl'
+          alias kgp='kubectl get pods'
+          alias kgs='kubectl get svc'
+          alias d='docker'
+          alias dc='docker compose'
+          alias ll='ls -lah'
+          alias gs='git status'
+          
+          # Colored prompt
+          export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+        marker: "# {mark} ANSIBLE MANAGED"
+        create: yes
+        owner: "{{ workstation_user }}"
+    
+    - name: Configure vim
+      copy:
+        dest: "{{ user_home }}/.vimrc"
+        content: |
+          set number
+          set expandtab
+          set tabstop=2
+          set shiftwidth=2
+          syntax on
+          set background=dark
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure tmux
+      copy:
+        dest: "{{ user_home }}/.tmux.conf"
+        content: |
+          set -g mouse on
+          set -g base-index 1
+          setw -g pane-base-index 1
+          bind | split-window -h
+          bind - split-window -v
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Create XFCE config directory
+      file:
+        path: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml"
+        state: directory
+        owner: "{{ workstation_user }}"
+        mode: '0755'
+    
+    - name: Disable XFCE screensaver and lock
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <channel name="xfce4-screensaver" version="1.0">
+            <property name="saver" type="empty">
+              <property name="enabled" type="bool" value="false"/>
+              <property name="mode" type="int" value="0"/>
+            </property>
+            <property name="lock" type="empty">
+              <property name="enabled" type="bool" value="false"/>
+            </property>
+          </channel>
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure XFCE window manager (dark theme, workspaces)
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <channel name="xfwm4" version="1.0">
+            <property name="general" type="empty">
+              <property name="theme" type="string" value="Default-xhdpi"/>
+              <property name="workspace_count" type="int" value="6"/>
+              <property name="workspace_names" type="array">
+                <value type="string" value="Workspace 1"/>
+                <value type="string" value="Workspace 2"/>
+                <value type="string" value="Workspace 3"/>
+                <value type="string" value="Workspace 4"/>
+                <value type="string" value="Workspace 5"/>
+                <value type="string" value="Workspace 6"/>
+              </property>
+            </property>
+          </channel>
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure XFCE desktop (dark theme)
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <channel name="xsettings" version="1.0">
+            <property name="Net" type="empty">
+              <property name="ThemeName" type="string" value="Adwaita-dark"/>
+              <property name="IconThemeName" type="string" value="Adwaita"/>
+            </property>
+            <property name="Gtk" type="empty">
+              <property name="ColorScheme" type="string" value="prefer-dark"/>
+            </property>
+          </channel>
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Create panel launchers directory
+      file:
+        path: "{{ user_home }}/.config/xfce4/panel/launcher-{{ item.id }}"
+        state: directory
+        owner: "{{ workstation_user }}"
+        mode: '0755'
+      loop:
+        - { id: "15" }
+        - { id: "16" }
+        - { id: "17" }
+    
+    - name: Configure Firefox launcher
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/panel/launcher-15/firefox.desktop"
+        content: |
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=Firefox
+          Exec=firefox
+          Icon=firefox
+          Terminal=false
+          Categories=Network;WebBrowser;
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure Thunar launcher
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/panel/launcher-16/thunar.desktop"
+        content: |
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=Thunar File Manager
+          Exec=thunar
+          Icon=system-file-manager
+          Terminal=false
+          Categories=System;FileManager;
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure Terminal launcher
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/panel/launcher-17/terminal.desktop"
+        content: |
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=Terminal
+          Exec=xfce4-terminal
+          Icon=utilities-terminal
+          Terminal=false
+          Categories=System;TerminalEmulator;
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure XFCE panel with launchers
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <channel name="xfce4-panel" version="1.0">
+            <property name="panels" type="array">
+              <value type="int" value="1"/>
+              <property name="panel-1" type="empty">
+                <property name="position" type="string" value="p=6;x=0;y=0"/>
+                <property name="size" type="uint" value="26"/>
+                <property name="plugin-ids" type="array">
+                  <value type="int" value="1"/>
+                  <value type="int" value="15"/>
+                  <value type="int" value="16"/>
+                  <value type="int" value="17"/>
+                  <value type="int" value="3"/>
+                  <value type="int" value="4"/>
+                  <value type="int" value="5"/>
+                  <value type="int" value="6"/>
+                </property>
+              </property>
+            </property>
+            <property name="plugins" type="empty">
+              <property name="plugin-1" type="string" value="applicationsmenu"/>
+              <property name="plugin-3" type="string" value="separator">
+                <property name="expand" type="bool" value="true"/>
+                <property name="style" type="uint" value="0"/>
+              </property>
+              <property name="plugin-4" type="string" value="pager">
+                <property name="rows" type="uint" value="2"/>
+                <property name="miniature-view" type="bool" value="true"/>
+              </property>
+              <property name="plugin-5" type="string" value="separator">
+                <property name="style" type="uint" value="0"/>
+              </property>
+              <property name="plugin-6" type="string" value="clock"/>
+              <property name="plugin-15" type="string" value="launcher">
+                <property name="items" type="array">
+                  <value type="string" value="firefox.desktop"/>
+                </property>
+              </property>
+              <property name="plugin-16" type="string" value="launcher">
+                <property name="items" type="array">
+                  <value type="string" value="thunar.desktop"/>
+                </property>
+              </property>
+              <property name="plugin-17" type="string" value="launcher">
+                <property name="items" type="array">
+                  <value type="string" value="terminal.desktop"/>
+                </property>
+              </property>
+            </property>
+          </channel>
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Configure workspace switcher (2 rows x 3 columns)
+      copy:
+        dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <channel name="xfce4-desktop" version="1.0">
+            <property name="desktop-icons" type="empty">
+              <property name="style" type="int" value="0"/>
+            </property>
+          </channel>
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    - name: Create GTK-3.0 config directory
+      file:
+        path: "{{ user_home }}/.config/gtk-3.0"
+        state: directory
+        owner: "{{ workstation_user }}"
+        mode: '0755'
+    
+    - name: Set GTK dark theme preference globally
+      copy:
+        dest: "{{ user_home }}/.config/gtk-3.0/settings.ini"
+        content: |
+          [Settings]
+          gtk-application-prefer-dark-theme=1
+          gtk-theme-name=Adwaita-dark
+          gtk-icon-theme-name=Adwaita
+        owner: "{{ workstation_user }}"
+        mode: '0644'
+    
+    # ============================================
+    # 11. USEFUL CLI TOOLS
+    # ============================================
+    - name: Install additional CLI tools
+      apt:
+        name:
+          - ncdu         # Disk usage analyzer
+          - ripgrep      # Better grep
+          - fd-find      # Better find
+          - bat          # Better cat
+          - net-tools    # ifconfig, netstat
+          - dnsutils     # dig, nslookup
+          - iputils-ping
+        state: present
+    
+    - name: Set memlock limits for better application compatibility
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "{{ item }}"
+        create: yes
+      loop:
+        - "* soft memlock unlimited"
+        - "* hard memlock unlimited"
+  
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ============================================
+          ✅ DevOps Workstation Setup Complete!
+          ============================================
+          
+          Installed:
+          - Desktop: XFCE (via Proxmox Console)
+          - IDEs: IntelliJ IDEA, VS Code
+          - IaC: Terraform, Ansible
+          - Container: Docker
+          - K8s CLI: kubectl, helm, k9s
+          - Git: Configured
+          
+          VNC Access (backup):
+          - Port: 5901
+          - Password: {{ vnc_password }}
+          - Command: vncviewer <vm-ip>:5901
+          
+          Workspace: ~/workspace/
+          
+          Next steps:
+          1. Reboot: sudo reboot
+          2. Login to XFCE desktop
+          3. Clone your repos to ~/workspace/
+          4. Start coding!
+          
+          To connect to Kubernetes cluster later:
+          - Copy kubeconfig: scp k8s-master:/etc/rancher/k3s/k3s.yaml ~/.kube/config
+          - Test: kubectl get nodes
+          ============================================
