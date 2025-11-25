@@ -6,15 +6,15 @@
 - name: Setup DevOps Workstation
   hosts: all
   become: yes
-  
+
   vars:
     user_home: "/home/{{ workstation_user }}"
-    
+
     # IDE Configuration
     install_intellij: true
     install_vscode: true
     intellij_version: "2024.2.4"
-    
+
     # VNC Configuration (Backup-Zugriff)
     enable_vnc: true
 
@@ -30,7 +30,7 @@
       apt:
         update_cache: yes
         cache_valid_time: 3600
-    
+
     # ============================================
     # SNAP REMOVAL & ALTERNATIVE REPOS (moved to role)
     # (Can be removed as a block if snap is desired)
@@ -38,7 +38,7 @@
     - import_role:
         name: snap_removal
     # ============================================
-    
+
     - name: Install essential packages
       apt:
         name:
@@ -57,7 +57,7 @@
           - gnupg
           - software-properties-common
         state: present
-    
+
     # ============================================
     # USER CONFIGURATION
     # ============================================
@@ -66,7 +66,7 @@
         name: "{{ workstation_user }}"
         comment: "{{ workstation_user }}"
         state: present
-    
+
     # ============================================
     # 2. DESKTOP ENVIRONMENT (XFCE)
     # ============================================
@@ -82,26 +82,26 @@
           - mousepad
           - gnome-themes-extra
         state: present
-    
+
     - name: Set LightDM as default display manager
       copy:
         dest: /etc/X11/default-display-manager
         content: "/usr/sbin/lightdm\n"
         mode: '0644'
-    
+
     - name: Enable LightDM display manager (but don't start yet)
       systemd:
         name: lightdm
         enabled: yes
       # Nicht starten - erst beim Reboot!
-    
+
     - name: Set graphical target as default
       file:
         src: /lib/systemd/system/graphical.target
         dest: /etc/systemd/system/default.target
         state: link
         force: yes
-    
+
     - name: Install VNC Server
       apt:
         name:
@@ -109,7 +109,7 @@
           - tigervnc-common
         state: present
       when: enable_vnc
-    
+
     - name: Setup VNC for user
       block:
         - name: Create VNC directory
@@ -118,20 +118,20 @@
             state: directory
             owner: "{{ workstation_user }}"
             mode: '0755'
-        
+
         - name: Set VNC password
           shell: |
             echo "{{ vnc_password }}" | vncpasswd -f > {{ user_home }}/.vnc/passwd
           args:
             creates: "{{ user_home }}/.vnc/passwd"
           become_user: "{{ workstation_user }}"
-        
+
         - name: Set VNC password permissions
           file:
             path: "{{ user_home }}/.vnc/passwd"
             mode: '0600'
             owner: "{{ workstation_user }}"
-        
+
         - name: Create VNC xstartup
           copy:
             dest: "{{ user_home }}/.vnc/xstartup"
@@ -143,7 +143,7 @@
             owner: "{{ workstation_user }}"
             mode: '0755'
       when: enable_vnc
-    
+
     - name: Create VNC systemd service
       copy:
         dest: /etc/systemd/system/vncserver@.service
@@ -151,38 +151,38 @@
           [Unit]
           Description=Start TigerVNC server at startup
           After=syslog.target network.target
-          
+
           [Service]
           Type=forking
           User={{ workstation_user }}
           Group={{ workstation_user }}
           WorkingDirectory={{ user_home }}
-          
+
           ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
           ExecStart=/usr/bin/vncserver -depth 24 -geometry 1920x1080 -localhost no :%i
           ExecStop=/usr/bin/vncserver -kill :%i
-          
+
           # Auto-Restart bei Crash oder Logout
           Restart=always
           RestartSec=5
-          
+
           [Install]
           WantedBy=multi-user.target
         mode: '0644'
       when: enable_vnc
-    
+
     - name: Reload systemd daemon
       systemd:
         daemon_reload: yes
       when: enable_vnc
-    
+
     - name: Enable and start VNC service
       systemd:
         name: "vncserver@1"
         enabled: yes
         state: started
       when: enable_vnc
-    
+
     # ============================================
     # 3. GIT & VERSION CONTROL
     # ============================================
@@ -194,7 +194,7 @@
           - gitk
           - meld
         state: present
-    
+
     - name: Configure Git
       community.general.git_config:
         name: "{{ item.name }}"
@@ -206,7 +206,7 @@
         - { name: 'init.defaultBranch', value: 'main' }
         - { name: 'pull.rebase', value: 'false' }
       become_user: "{{ workstation_user }}"
-    
+
     # ============================================
     # 4. TERRAFORM
     # ============================================
@@ -214,19 +214,19 @@
       apt_key:
         url: https://apt.releases.hashicorp.com/gpg
         state: present
-    
+
     - name: Add HashiCorp repository
       apt_repository:
         repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
         state: present
         filename: hashicorp
-    
+
     - name: Install Terraform
       apt:
         name: terraform
         state: present
         update_cache: yes
-    
+
     # ============================================
     # 5. ANSIBLE
     # ============================================
@@ -237,14 +237,14 @@
           - python3-pip
           - python3-venv
         state: present
-    
+
     - name: Install Ansible via pip
       pip:
         name:
           - ansible
           - ansible-lint
         executable: pip3
-    
+
     # ============================================
     # 6. DOCKER
     # ============================================
@@ -252,12 +252,12 @@
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
-    
+
     - name: Add Docker repository
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
-    
+
     - name: Install Docker
       apt:
         name:
@@ -267,19 +267,19 @@
           - docker-compose-plugin
         state: present
         update_cache: yes
-    
+
     - name: Add user to docker group
       user:
         name: "{{ workstation_user }}"
         groups: docker
         append: yes
-    
+
     - name: Enable Docker service
       systemd:
         name: docker
         enabled: yes
         state: started
-    
+
     # ============================================
     # 7. KUBERNETES CLI TOOLS
     # ============================================
@@ -287,39 +287,39 @@
       apt_key:
         url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
         state: present
-    
+
     - name: Add Kubernetes repository
       apt_repository:
         repo: "deb https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
         state: present
         filename: kubernetes
-    
+
     - name: Install kubectl
       apt:
         name: kubectl
         state: present
         update_cache: yes
-    
+
     - name: Install Helm
       shell: |
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       args:
         creates: /usr/local/bin/helm
-    
+
     - name: Download and install k9s
       unarchive:
         src: https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
         dest: /usr/local/bin/
         remote_src: yes
         creates: /usr/local/bin/k9s
-    
+
     - name: Create .kube directory
       file:
         path: "{{ user_home }}/.kube"
         state: directory
         owner: "{{ workstation_user }}"
         mode: '0700'
-    
+
     # ============================================
     # 8. VS CODE
     # ============================================
@@ -328,21 +328,21 @@
         url: https://packages.microsoft.com/keys/microsoft.asc
         state: present
       when: install_vscode
-    
+
     - name: Add VS Code repository
       apt_repository:
         repo: "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main"
         state: present
         filename: vscode
       when: install_vscode
-    
+
     - name: Install VS Code
       apt:
         name: code
         state: present
         update_cache: yes
       when: install_vscode
-    
+
     - name: Install VS Code extensions
       command: code --install-extension {{ item }}
       loop:
@@ -356,7 +356,7 @@
         HOME: "{{ user_home }}"
       ignore_errors: yes
       when: install_vscode
-    
+
     # ============================================
     # 9. INTELLIJ IDEA
     # ============================================
@@ -366,13 +366,13 @@
         state: directory
         mode: '0755'
       when: install_intellij
-    
+
     - name: Download IntelliJ IDEA
       get_url:
         url: "https://download.jetbrains.com/idea/ideaIC-{{ intellij_version }}.tar.gz"
         dest: "/tmp/intellij.tar.gz"
       when: install_intellij
-    
+
     - name: Extract IntelliJ
       unarchive:
         src: "/tmp/intellij.tar.gz"
@@ -381,7 +381,7 @@
         extra_opts: [--strip-components=1]
         creates: /opt/intellij/bin/idea.sh
       when: install_intellij
-    
+
     - name: Create IntelliJ desktop entry
       copy:
         dest: /usr/share/applications/intellij-idea.desktop
@@ -397,14 +397,14 @@
           Terminal=false
         mode: '0644'
       when: install_intellij
-    
+
     - name: Create IntelliJ symlink
       file:
         src: /opt/intellij/bin/idea.sh
         dest: /usr/local/bin/idea
         state: link
       when: install_intellij
-    
+
     # ============================================
     # 10. USER CONFIGURATION
     # ============================================
@@ -420,7 +420,7 @@
         - workspace/ansible
         - workspace/kubernetes
         - workspace/scripts
-    
+
     - name: Configure bash aliases
       blockinfile:
         path: "{{ user_home }}/.bashrc"
@@ -437,13 +437,13 @@
           alias dc='docker compose'
           alias ll='ls -lah'
           alias gs='git status'
-          
+
           # Colored prompt
           export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
         marker: "# {mark} ANSIBLE MANAGED"
         create: yes
         owner: "{{ workstation_user }}"
-    
+
     - name: Configure vim
       copy:
         dest: "{{ user_home }}/.vimrc"
@@ -456,7 +456,7 @@
           set background=dark
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure tmux
       copy:
         dest: "{{ user_home }}/.tmux.conf"
@@ -468,14 +468,14 @@
           bind - split-window -v
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Create XFCE config directory
       file:
         path: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml"
         state: directory
         owner: "{{ workstation_user }}"
         mode: '0755'
-    
+
     - name: Disable XFCE screensaver and lock
       copy:
         dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml"
@@ -492,7 +492,7 @@
           </channel>
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure XFCE window manager (dark theme, workspaces)
       copy:
         dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
@@ -514,7 +514,7 @@
           </channel>
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure XFCE desktop (dark theme)
       copy:
         dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
@@ -531,7 +531,7 @@
           </channel>
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Create panel launchers directory
       file:
         path: "{{ user_home }}/.config/xfce4/panel/launcher-{{ item.id }}"
@@ -542,7 +542,7 @@
         - { id: "15" }
         - { id: "16" }
         - { id: "17" }
-    
+
     - name: Configure Firefox launcher
       copy:
         dest: "{{ user_home }}/.config/xfce4/panel/launcher-15/firefox.desktop"
@@ -557,7 +557,7 @@
           Categories=Network;WebBrowser;
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure Thunar launcher
       copy:
         dest: "{{ user_home }}/.config/xfce4/panel/launcher-16/thunar.desktop"
@@ -572,7 +572,7 @@
           Categories=System;FileManager;
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure Terminal launcher
       copy:
         dest: "{{ user_home }}/.config/xfce4/panel/launcher-17/terminal.desktop"
@@ -587,7 +587,7 @@
           Categories=System;TerminalEmulator;
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure XFCE panel with launchers
       copy:
         dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
@@ -644,7 +644,7 @@
           </channel>
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Configure workspace switcher (2 rows x 3 columns)
       copy:
         dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
@@ -657,14 +657,14 @@
           </channel>
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     - name: Create GTK-3.0 config directory
       file:
         path: "{{ user_home }}/.config/gtk-3.0"
         state: directory
         owner: "{{ workstation_user }}"
         mode: '0755'
-    
+
     - name: Set GTK dark theme preference globally
       copy:
         dest: "{{ user_home }}/.config/gtk-3.0/settings.ini"
@@ -675,7 +675,7 @@
           gtk-icon-theme-name=Adwaita
         owner: "{{ workstation_user }}"
         mode: '0644'
-    
+
     # ============================================
     # 11. USEFUL CLI TOOLS
     # ============================================
@@ -690,7 +690,7 @@
           - dnsutils     # dig, nslookup
           - iputils-ping
         state: present
-    
+
     - name: Set memlock limits for better application compatibility
       lineinfile:
         path: /etc/security/limits.conf
@@ -699,7 +699,7 @@
       loop:
         - "* soft memlock unlimited"
         - "* hard memlock unlimited"
-  
+
   post_tasks:
     - name: Display completion message
       debug:
@@ -707,7 +707,7 @@
           ============================================
           ✅ DevOps Workstation Setup Complete!
           ============================================
-          
+
           Installed:
           - Desktop: XFCE (via Proxmox Console)
           - IDEs: IntelliJ IDEA, VS Code
@@ -715,20 +715,20 @@
           - Container: Docker
           - K8s CLI: kubectl, helm, k9s
           - Git: Configured
-          
+
           VNC Access (backup):
           - Port: 5901
           - Password: {{ vnc_password }}
           - Command: vncviewer <vm-ip>:5901
-          
+
           Workspace: ~/workspace/
-          
+
           Next steps:
           1. Reboot: sudo reboot
           2. Login to XFCE desktop
           3. Clone your repos to ~/workspace/
           4. Start coding!
-          
+
           To connect to Kubernetes cluster later:
           - Copy kubeconfig: scp k8s-master:/etc/rancher/k3s/k3s.yaml ~/.kube/config
           - Test: kubectl get nodes
