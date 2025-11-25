@@ -6,6 +6,11 @@
 - name: Setup DevOps Workstation
   hosts: all
   become: true
+  # Collections: Specifies which Ansible collection namespaces to search for modules.
+  # By declaring ansible.builtin here, we can use short module names (e.g., "apt:")
+  # instead of full names (e.g., "ansible.builtin.apt:") throughout the playbook.
+  collections:
+    - ansible.builtin
 
   vars:
     user_home: "/home/{{ workstation_user }}"
