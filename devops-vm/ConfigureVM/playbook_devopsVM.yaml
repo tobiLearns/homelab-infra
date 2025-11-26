@@ -18,7 +18,9 @@
     # IDE Configuration
     install_intellij: true
     install_vscode: true
+    install_pycharm: true
     intellij_version: "2024.2.4"
+    pycharm_version: "2024.3"
 
     # VNC Configuration (Backup-Zugriff)
     enable_vnc: true
@@ -374,6 +376,20 @@
       when: install_vscode
 
     # ============================================
+    # 8.5 GITKRAKEN (Git GUI)
+    # ============================================
+    - name: Download GitKraken
+      get_url:
+        url: https://release.gitkraken.com/linux/gitkraken-amd64.deb
+        dest: /tmp/gitkraken-amd64.deb
+        mode: '0644'
+
+    - name: Install GitKraken
+      apt:
+        deb: /tmp/gitkraken-amd64.deb
+        state: present
+
+    # ============================================
     # 9. INTELLIJ IDEA
     # ============================================
     - name: Create IntelliJ directory
@@ -420,6 +436,54 @@
         dest: /usr/local/bin/idea
         state: link
       when: install_intellij
+
+    # ============================================
+    # 9.5 PYCHARM COMMUNITY EDITION
+    # ============================================
+    - name: Download PyCharm Community Edition
+      get_url:
+        url: "https://download.jetbrains.com/python/pycharm-community-{{ pycharm_version }}.tar.gz"
+        dest: "/tmp/pycharm-community.tar.gz"
+      when: install_pycharm
+
+    - name: Create PyCharm directory
+      file:
+        path: /opt/pycharm
+        state: directory
+        mode: '0755'
+      when: install_pycharm
+
+    - name: Extract PyCharm
+      unarchive:
+        src: "/tmp/pycharm-community.tar.gz"
+        dest: /opt/pycharm
+        remote_src: true
+        extra_opts: [--strip-components=1]
+        creates: /opt/pycharm/bin/pycharm.sh
+      when: install_pycharm
+
+    - name: Create PyCharm desktop entry
+      copy:
+        dest: /usr/share/applications/pycharm-community.desktop
+        content: |
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=PyCharm Community Edition
+          Icon=/opt/pycharm/bin/pycharm.png
+          Exec=/opt/pycharm/bin/pycharm.sh %f
+          Comment=Python IDE
+          Categories=Development;IDE;
+          Terminal=false
+        mode: '0644'
+      when: install_pycharm
+
+    - name: Create PyCharm symlink
+      file:
+        src: /opt/pycharm/bin/pycharm.sh
+        dest: /usr/local/bin/pycharm
+        state: link
+      when: install_pycharm
 
     # ============================================
     # 10. USER CONFIGURATION
