@@ -5,11 +5,6 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.70"
     }
-    # Only for temporary use. Can be removed, when waiting for IPs is done by pipeline.
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.11"
-    }
   }
 }
 
@@ -149,23 +144,21 @@ output "vm_ips" {
   ]
 }
 
-# Wait 60 seconds after VM creation.
-# Only for temporary use. Can be removed, when waiting for IPs is done by pipeline.
-resource "time_sleep" "wait_for_agent" {
-  depends_on = [proxmox_virtual_environment_vm.ubuntu_vm]
-  
-  create_duration = "60s"
-  
-  triggers = {
-    # Will be generated newly, if VMs are created
-    vm_ids = join(",", [for vm in proxmox_virtual_environment_vm.ubuntu_vm : vm.id])
-  }
+output "vm_macs" {
+  description = "MAC addresses of VMs (agent must be running for accurate values)"
+  value       = proxmox_virtual_environment_vm.ubuntu_vm[*].mac_addresses
 }
+
+
 
 # SSH-Config: One file per VM
 resource "local_file" "ssh_config" {
-  depends_on = [time_sleep.wait_for_agent]
-
+  # Note: We do NOT wait for guest-agent / IP here. The previous implementation
+  # used a temporary wait to let the guest-agent report an IP, but that didn't work.
+  # Generated files will therefore contain IP `0.0.0.0` and have to be adjusted manually.
+  # The real IPs will be discovered and written later by the pipeline.
+  #
+  # This keeps VM creation fast and delegates IP discovery to the pipeline.
   count = var.vm_count
   
   filename = pathexpand("~/.ssh/config.d/terraform-vm-${proxmox_virtual_environment_vm.ubuntu_vm[count.index].vm_id}")
@@ -189,8 +182,7 @@ resource "local_file" "ssh_config" {
 
 # Ansible Inventory: One file for all VMs
 resource "local_file" "ansible_inventory" {
-  depends_on = [time_sleep.wait_for_agent]
-
+  # See ssh_config note above.
   filename = "${path.module}/inventory.ini"
   
   content = <<-EOF
