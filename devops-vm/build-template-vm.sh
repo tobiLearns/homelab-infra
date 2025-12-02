@@ -80,6 +80,24 @@ sudo virt-customize -a "$WORK_IMAGE" \
   --run-command "sed -i 's/^#*PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config" \
   --run-command "sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config"
 
+# Clean cloud-init state and remove persistent network/DHCP identifiers.
+#
+# Rationale:
+# When creating a template from a cloud image, files like cloud-init state,
+# DHCP lease files and the system `machine-id` can be copied into the template.
+# If those artifacts are left in the template, cloned VMs may present identical
+# DHCP client identifiers or cached leases and therefore receive the same
+# IPv4 address from the DHCP server despite having unique MAC addresses.
+#
+# The commands below ensure the template image is sanitized so each clone will
+# perform a fresh cloud-init run, generate a new instance-id/machine-id and
+# request a new DHCP lease on first boot.
+sudo virt-customize -a "$WORK_IMAGE" \
+  --run-command "[ -x /usr/bin/cloud-init ] && cloud-init clean --logs || true" \
+  --run-command "rm -rf /var/lib/cloud/* /var/lib/dhcp/* /var/lib/dhclient/* /var/lib/dhcp3/* /var/lib/NetworkManager/* 2>/dev/null || true" \
+  --run-command "truncate -s 0 /etc/machine-id 2>/dev/null || true" \
+  --run-command "rm -f /var/lib/dbus/machine-id 2>/dev/null || true"
+
 echo "✅ Image customization complete"
 
 # === STEP 3: Transfer image to Proxmox ===
