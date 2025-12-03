@@ -126,19 +126,23 @@
             owner: "{{ workstation_user }}"
             mode: '0755'
 
-        - name: Set VNC password
-          shell: |
-            echo "{{ vnc_password }}" | vncpasswd -f > {{ user_home }}/.vnc/passwd
+        - name: Generate VNC password hash
+          command: vncpasswd -f
           args:
-            creates: "{{ user_home }}/.vnc/passwd"
+            stdin: "{{ vnc_password }}"
+          register: vnc_password_hash
+          changed_when: false
           become: true
           become_user: "{{ workstation_user }}"
 
-        - name: Set VNC password permissions
-          file:
-            path: "{{ user_home }}/.vnc/passwd"
+        - name: Set VNC password file
+          copy:
+            content: "{{ vnc_password_hash.stdout }}"
+            dest: "{{ user_home }}/.vnc/passwd"
             mode: '0600'
             owner: "{{ workstation_user }}"
+          become: true
+          become_user: "{{ workstation_user }}"
 
         - name: Create VNC xstartup
           copy:
