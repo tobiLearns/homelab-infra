@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: Install and configure XFCE desktop, LightDM and user XFCE settings
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []
