@@ -64,6 +64,29 @@
           - software-properties-common
         state: present
 
+    - name: Install additional CLI tools
+      apt:
+        name:
+          - ncdu         # Disk usage analyzer
+          - ripgrep      # Better grep
+          - fd-find      # Better find
+          - bat          # Better cat
+          - net-tools    # ifconfig, netstat
+          - dnsutils     # dig, nslookup
+          - iputils-ping
+        state: present
+
+    - name: Set memlock limits for better application compatibility
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "{{ item }}"
+        create: true
+        mode: '0644'
+      loop:
+        - "* soft memlock unlimited"
+        - "* hard memlock unlimited"
+
+
     # ============================================
     # 2. DESKTOP ENVIRONMENT (XFCE)
     # ============================================
@@ -118,31 +141,6 @@
         name: user_config
 
     # Desktop XFCE user config is handled by the `desktop` role
-
-    # ============================================
-    # 9. USEFUL CLI TOOLS
-    # ============================================
-    - name: Install additional CLI tools
-      apt:
-        name:
-          - ncdu         # Disk usage analyzer
-          - ripgrep      # Better grep
-          - fd-find      # Better find
-          - bat          # Better cat
-          - net-tools    # ifconfig, netstat
-          - dnsutils     # dig, nslookup
-          - iputils-ping
-        state: present
-
-    - name: Set memlock limits for better application compatibility
-      lineinfile:
-        path: /etc/security/limits.conf
-        line: "{{ item }}"
-        create: true
-        mode: '0644'
-      loop:
-        - "* soft memlock unlimited"
-        - "* hard memlock unlimited"
 
   post_tasks:
     - name: Display completion message
