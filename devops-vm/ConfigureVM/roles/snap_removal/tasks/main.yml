@@ -4,13 +4,13 @@
 
 - name: Get list of snap packages
   command: snap list
-  register: snap_list_result
+  register: snap_removal_snap_list_result
   changed_when: false
-  failed_when: snap_list_result.rc not in [0, 1]
+  failed_when: snap_removal_snap_list_result.rc not in [0, 1]
 
 - name: Remove all snap packages
   command: snap remove --purge {{ item }}
-  loop: "{{ snap_list_result.stdout_lines[1:] | map('split') | map('first') | list }}"
+  loop: "{{ snap_removal_snap_list_result.stdout_lines[1:] | map('split') | map('first') | list }}"
   register: snap_removal_remove_result
   changed_when: "'removed' in snap_removal_remove_result.stdout | default('')"
   failed_when: "snap_removal_remove_result.rc not in [0, 1]"
