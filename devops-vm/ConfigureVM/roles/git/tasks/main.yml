@@ -1,0 +1,29 @@
+---
+# tasks file for git role
+- name: Install Git tools
+  apt:
+    name: "{{ git_packages }}"
+    state: present
+
+- name: Ensure git user info is defined
+  assert:
+    that:
+      - git_user_name is defined
+      - git_user_email is defined
+    fail_msg: |
+      git_user_name and/or git_user_email are not defined.
+      Create a local file 'vars/secrets.yml' containing these variables and
+      ensure it's gitignored. See ConfigureVM/README.md for details.
+
+- name: Configure Git global settings
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop:
+    - { name: 'user.name', value: "{{ git_user_name }}" }
+    - { name: 'user.email', value: "{{ git_user_email }}" }
+    - { name: 'init.defaultBranch', value: 'main' }
+    - { name: 'pull.rebase', value: 'false' }
+  become: true
+  become_user: "{{ workstation_user }}"

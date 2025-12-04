@@ -197,27 +197,9 @@
     # ============================================
     # 3. GIT & VERSION CONTROL
     # ============================================
-    - name: Install Git tools
-      apt:
-        name:
-          - git
-          - git-lfs
-          - gitk
-          - meld
-        state: present
-
-    - name: Configure Git
-      community.general.git_config:
-        name: "{{ item.name }}"
-        value: "{{ item.value }}"
-        scope: global
-      loop:
-        - { name: 'user.name', value: "{{ git_user_name }}" }
-        - { name: 'user.email', value: "{{ git_user_email }}" }
-        - { name: 'init.defaultBranch', value: 'main' }
-        - { name: 'pull.rebase', value: 'false' }
-      become: true
-      become_user: "{{ workstation_user }}"
+    - name: Apply Git role
+      import_role:
+        name: git
 
     # ============================================
     # 4. TERRAFORM
