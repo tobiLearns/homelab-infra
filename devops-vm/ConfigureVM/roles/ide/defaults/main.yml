@@ -1,0 +1,11 @@
+---
+# Defaults for IDE role
+# The playbook defines `install_vscode` and `install_intellij` already.
+# Optionally override these per role invocation.
+
+ide_vscode_extensions:
+  - hashicorp.terraform
+  - redhat.ansible
+  - ms-azuretools.vscode-docker
+  - ms-kubernetes-tools.vscode-kubernetes-tools
+  - eamodio.gitlens
