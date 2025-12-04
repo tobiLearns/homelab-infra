@@ -263,96 +263,14 @@
         mode: '0700'
 
     # ============================================
-    # 7. VS CODE
+    # 7. IDEs
     # ============================================
-    - name: Add Microsoft GPG key
-      apt_key:
-        url: https://packages.microsoft.com/keys/microsoft.asc
-        state: present
-      when: install_vscode
-
-    - name: Add VS Code repository
-      apt_repository:
-        repo: "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main"
-        state: present
-        filename: vscode
-      when: install_vscode
-
-    - name: Install VS Code
-      apt:
-        name: code
-        state: present
-        update_cache: true
-      when: install_vscode
-
-    - name: Install VS Code extensions
-      command: code --install-extension {{ item }}
-      loop:
-        - hashicorp.terraform
-        - redhat.ansible
-        - ms-azuretools.vscode-docker
-        - ms-kubernetes-tools.vscode-kubernetes-tools
-        - eamodio.gitlens
-      become: true
-      become_user: "{{ workstation_user }}"
-      environment:
-        HOME: "{{ user_home }}"
-      register: vscode_ext_result
-      changed_when: "'already installed' not in vscode_ext_result.stderr | default('')"
-      failed_when: "vscode_ext_result.rc not in [0, 1]"
-      when: install_vscode
+    - name: Install IDEs (VS Code, IntelliJ)
+      import_role:
+        name: ide
 
     # ============================================
-    # 8. INTELLIJ IDEA
-    # ============================================
-    - name: Create IntelliJ directory
-      file:
-        path: /opt/intellij
-        state: directory
-        mode: '0755'
-      when: install_intellij
-
-    - name: Download IntelliJ IDEA
-      get_url:
-        url: "https://download.jetbrains.com/idea/ideaIC-{{ intellij_version }}.tar.gz"
-        dest: "/tmp/intellij.tar.gz"
-        mode: '0644'
-      when: install_intellij
-
-    - name: Extract IntelliJ
-      unarchive:
-        src: "/tmp/intellij.tar.gz"
-        dest: /opt/intellij
-        remote_src: true
-        extra_opts: [--strip-components=1]
-        creates: /opt/intellij/bin/idea.sh
-      when: install_intellij
-
-    - name: Create IntelliJ desktop entry
-      copy:
-        dest: /usr/share/applications/intellij-idea.desktop
-        content: |
-          [Desktop Entry]
-          Version=1.0
-          Type=Application
-          Name=IntelliJ IDEA
-          Icon=/opt/intellij/bin/idea.png
-          Exec=/opt/intellij/bin/idea.sh %f
-          Comment=Java IDE
-          Categories=Development;IDE;
-          Terminal=false
-        mode: '0644'
-      when: install_intellij
-
-    - name: Create IntelliJ symlink
-      file:
-        src: /opt/intellij/bin/idea.sh
-        dest: /usr/local/bin/idea
-        state: link
-      when: install_intellij
-
-    # ============================================
-    # 9. USER CONFIGURATION
+    # 8. USER CONFIGURATION
     # ============================================
     - name: Create workspace directories
       file:
@@ -624,7 +542,7 @@
         mode: '0644'
 
     # ============================================
-    # 10. USEFUL CLI TOOLS
+    # 9. USEFUL CLI TOOLS
     # ============================================
     - name: Install additional CLI tools
       apt:
