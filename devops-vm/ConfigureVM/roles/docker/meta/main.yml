@@ -1,0 +1,6 @@
+---
+galaxy_info:
+  author: tobi
+  description: Install and configure Docker container runtime
+  license: UNLICENSED
+  min_ansible_version: "2.9"
