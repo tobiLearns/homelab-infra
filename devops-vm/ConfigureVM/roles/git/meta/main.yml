@@ -1,0 +1,9 @@
+---
+# meta for git role
+galaxy_info:
+  author: tobi
+  description: Role to install and configure Git for the workstation user
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []
