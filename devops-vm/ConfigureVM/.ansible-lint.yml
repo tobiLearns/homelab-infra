@@ -1,0 +1,4 @@
+---
+# Project ansible-lint config: skip the fqcn rule to allow short module names
+skip_list:
+  - fqcn
