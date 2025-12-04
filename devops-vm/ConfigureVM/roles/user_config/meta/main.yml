@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: "Per-user configuration: workspace dirs, shell aliases, vim/tmux dotfiles"
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []
