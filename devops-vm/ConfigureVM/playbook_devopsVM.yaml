@@ -108,91 +108,9 @@
         state: link
         force: true
 
-    - name: Install VNC Server
-      apt:
-        name:
-          - tigervnc-standalone-server
-          - tigervnc-common
-        state: present
-      when: enable_vnc
-
-    - name: Setup VNC for user
-      when: enable_vnc
-      block:
-        - name: Create VNC directory
-          file:
-            path: "{{ user_home }}/.vnc"
-            state: directory
-            owner: "{{ workstation_user }}"
-            mode: '0755'
-
-        - name: Generate VNC password hash
-          command: vncpasswd -f
-          args:
-            stdin: "{{ vnc_password }}"
-          register: vnc_password_hash
-          changed_when: false
-          become: true
-          become_user: "{{ workstation_user }}"
-
-        - name: Set VNC password file
-          copy:
-            content: "{{ vnc_password_hash.stdout }}"
-            dest: "{{ user_home }}/.vnc/passwd"
-            mode: '0600'
-            owner: "{{ workstation_user }}"
-          become: true
-          become_user: "{{ workstation_user }}"
-
-        - name: Create VNC xstartup
-          copy:
-            dest: "{{ user_home }}/.vnc/xstartup"
-            content: |
-              #!/bin/bash
-              unset SESSION_MANAGER
-              unset DBUS_SESSION_BUS_ADDRESS
-              exec startxfce4
-            owner: "{{ workstation_user }}"
-            mode: '0755'
-
-    - name: Create VNC systemd service
-      copy:
-        dest: /etc/systemd/system/vncserver@.service
-        content: |
-          [Unit]
-          Description=Start TigerVNC server at startup
-          After=syslog.target network.target
-
-          [Service]
-          Type=forking
-          User={{ workstation_user }}
-          Group={{ workstation_user }}
-          WorkingDirectory={{ user_home }}
-
-          ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
-          ExecStart=/usr/bin/vncserver -depth 24 -geometry 1920x1080 -localhost no :%i
-          ExecStop=/usr/bin/vncserver -kill :%i
-
-          # Auto-Restart bei Crash oder Logout
-          Restart=always
-          RestartSec=5
-
-          [Install]
-          WantedBy=multi-user.target
-        mode: '0644'
-      when: enable_vnc
-
-    - name: Reload systemd daemon
-      systemd:
-        daemon_reload: true
-      when: enable_vnc
-
-    - name: Enable and start VNC service
-      systemd:
-        name: "vncserver@1"
-        enabled: true
-        state: started
-      when: enable_vnc
+    - name: Install and configure VNC server
+      import_role:
+        name: vnc
 
     # ============================================
     # 3. GIT & VERSION CONTROL
