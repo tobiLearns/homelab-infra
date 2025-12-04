@@ -1,0 +1,29 @@
+---
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Install Docker
+  apt:
+    name: "{{ docker_packages }}"
+    state: present
+    update_cache: true
+
+- name: Add user to docker group
+  user:
+    name: "{{ workstation_user }}"
+    groups: docker
+    append: true
+
+- name: Enable Docker service
+  systemd:
+    name: docker
+    enabled: true
+    state: started
