@@ -1,0 +1,5 @@
+---
+# Defaults for VNC role
+vnc_display: 1
+vnc_geometry: "1920x1080"
+vnc_depth: 24
