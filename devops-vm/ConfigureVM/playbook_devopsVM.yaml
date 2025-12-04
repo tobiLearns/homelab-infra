@@ -99,49 +99,9 @@
     # ============================================
     # 6. KUBERNETES CLI TOOLS
     # ============================================
-    - name: Add Kubernetes GPG key
-      apt_key:
-        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
-        state: present
-
-    - name: Add Kubernetes repository
-      apt_repository:
-        repo: "deb https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
-        state: present
-        filename: kubernetes
-
-    - name: Install kubectl
-      apt:
-        name: kubectl
-        state: present
-        update_cache: true
-
-    - name: Install Helm
-      block:
-        - name: Download Helm installation script
-          get_url:
-            url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-            dest: /tmp/get-helm-3
-            mode: '0755'
-
-        - name: Run Helm installation script
-          command: /tmp/get-helm-3
-          args:
-            creates: /usr/local/bin/helm
-
-    - name: Download and install k9s
-      unarchive:
-        src: https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
-        dest: /usr/local/bin/
-        remote_src: true
-        creates: /usr/local/bin/k9s
-
-    - name: Create .kube directory
-      file:
-        path: "{{ user_home }}/.kube"
-        state: directory
-        owner: "{{ workstation_user }}"
-        mode: '0700'
+    - name: Install Kubernetes CLI tools
+      import_role:
+        name: kubernetes
 
     # ============================================
     # 7. IDEs
