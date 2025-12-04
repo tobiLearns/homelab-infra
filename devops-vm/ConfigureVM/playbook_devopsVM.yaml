@@ -202,45 +202,14 @@
         name: git
 
     # ============================================
-    # 4. TERRAFORM
+    # 4. IaC TOOLS (Terraform & Ansible)
     # ============================================
-    - name: Add HashiCorp GPG key
-      apt_key:
-        url: https://apt.releases.hashicorp.com/gpg
-        state: present
-
-    - name: Add HashiCorp repository
-      apt_repository:
-        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
-        state: present
-        filename: hashicorp
-
-    - name: Install Terraform
-      apt:
-        name: terraform
-        state: present
-        update_cache: true
+    - name: Apply IaC Tools role
+      import_role:
+        name: iac_tools
 
     # ============================================
-    # 5. ANSIBLE
-    # ============================================
-    - name: Install Python for Ansible
-      apt:
-        name:
-          - python3
-          - python3-pip
-          - python3-venv
-        state: present
-
-    - name: Install Ansible via pip
-      pip:
-        name:
-          - ansible
-          - ansible-lint
-        executable: pip3
-
-    # ============================================
-    # 6. DOCKER
+    # 5. DOCKER
     # ============================================
     - name: Add Docker GPG key
       apt_key:
@@ -275,7 +244,7 @@
         state: started
 
     # ============================================
-    # 7. KUBERNETES CLI TOOLS
+    # 6. KUBERNETES CLI TOOLS
     # ============================================
     - name: Add Kubernetes GPG key
       apt_key:
@@ -322,7 +291,7 @@
         mode: '0700'
 
     # ============================================
-    # 8. VS CODE
+    # 7. VS CODE
     # ============================================
     - name: Add Microsoft GPG key
       apt_key:
@@ -362,7 +331,7 @@
       when: install_vscode
 
     # ============================================
-    # 9. INTELLIJ IDEA
+    # 8. INTELLIJ IDEA
     # ============================================
     - name: Create IntelliJ directory
       file:
@@ -411,7 +380,7 @@
       when: install_intellij
 
     # ============================================
-    # 10. USER CONFIGURATION
+    # 9. USER CONFIGURATION
     # ============================================
     - name: Create workspace directories
       file:
@@ -683,7 +652,7 @@
         mode: '0644'
 
     # ============================================
-    # 11. USEFUL CLI TOOLS
+    # 10. USEFUL CLI TOOLS
     # ============================================
     - name: Install additional CLI tools
       apt:
