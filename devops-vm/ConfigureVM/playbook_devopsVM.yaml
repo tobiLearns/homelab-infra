@@ -19,6 +19,10 @@
     enable_vnc: true
 
   tasks:
+    - name: Load local secrets (optional)
+      include_vars:
+        file: vars/secrets.yml
+
     # ============================================
     # 1. SYSTEM BASICS
     # ============================================
