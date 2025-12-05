@@ -1,7 +1,5 @@
 ---
-# devops-workstation-playbook.yml
-# Minimales Setup für DevOps-Arbeit mit Desktop
-# KEIN Node.js, KEIN ML-Zeug, nur IaC-fokussiert
+# devops-workstation-playbook
 
 - name: Setup DevOps Workstation
   hosts: all
