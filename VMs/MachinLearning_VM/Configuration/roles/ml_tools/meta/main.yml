@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  role_name: ml_tools
+  author: ML DevOps Team
+  description: ML experiment tracking, data versioning, and productivity tools
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - machinelearning
+    - mlops
+    - experimenttracking
+    - dataversioning
+    - mlflow
+    - dvc
+
+dependencies:
+  - role: python_ml_base

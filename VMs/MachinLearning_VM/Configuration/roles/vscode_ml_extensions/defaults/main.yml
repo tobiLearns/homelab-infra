@@ -1,0 +1,31 @@
+---
+# VS Code must already be installed for this role to work
+vscode_ml_extensions_installed_check: true
+
+# Extension categories
+vscode_ml_extensions_install_python_extensions: true
+vscode_ml_extensions_install_jupyter_extensions: true
+vscode_ml_extensions_install_linting_extensions: true
+vscode_ml_extensions_install_git_extensions: true
+vscode_ml_extensions_install_docker_extensions: false
+vscode_ml_extensions_install_remote_extensions: false
+
+# Configuration
+vscode_ml_extensions_configure_vscode_settings: true
+vscode_ml_extensions_config_dir: "{{ ansible_env.HOME }}/.config/Code/User"
+
+# Python settings
+vscode_ml_extensions_python_default_interpreter: "/usr/bin/python3"
+vscode_ml_extensions_python_linting_enabled: true
+vscode_ml_extensions_python_linter: "flake8"  # Options: pylint, flake8, ruff
+vscode_ml_extensions_python_formatter: "black"  # Options: black, autopep8, yapf
+vscode_ml_extensions_python_line_length: 100
+vscode_ml_extensions_python_type_checking: "basic"  # Options: off, basic, strict
+
+# Jupyter settings
+vscode_ml_extensions_jupyter_kernel_restart_prompt: false
+vscode_ml_extensions_jupyter_execute_selection: true
+
+# Editor settings
+vscode_ml_extensions_editor_format_on_save: true
+vscode_ml_extensions_editor_organize_imports_on_save: true

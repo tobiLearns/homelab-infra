@@ -1,0 +1,41 @@
+---
+# Framework selection
+ml_frameworks_install_numpy_stack: true
+ml_frameworks_install_scikit_learn: true
+ml_frameworks_install_pytorch: true
+ml_frameworks_install_tensorflow: true
+ml_frameworks_install_gradient_boosting: true
+ml_frameworks_install_nlp_tools: true
+ml_frameworks_install_computer_vision: true
+ml_frameworks_install_onnx: true
+
+# PyTorch configuration (CPU version)
+ml_frameworks_pytorch_version: "latest"
+ml_frameworks_pytorch_channel: "https://download.pytorch.org/whl/cpu"
+
+# TensorFlow configuration
+ml_frameworks_tensorflow_version: "latest"
+ml_frameworks_install_tensorflow_datasets: true
+
+# Gradient Boosting
+ml_frameworks_install_xgboost: true
+ml_frameworks_install_lightgbm: true
+ml_frameworks_install_catboost: true
+
+# NLP tools
+ml_frameworks_install_transformers: true
+ml_frameworks_install_spacy: true
+ml_frameworks_install_nltk: true
+ml_frameworks_spacy_model: "en_core_web_sm"
+ml_frameworks_download_nltk_data: true
+ml_frameworks_nltk_packages:
+  - punkt
+  - stopwords
+  - wordnet
+
+# Computer Vision
+ml_frameworks_install_opencv: true
+ml_frameworks_install_image_libraries: true
+
+# Additional utilities
+ml_frameworks_install_ml_utilities: true

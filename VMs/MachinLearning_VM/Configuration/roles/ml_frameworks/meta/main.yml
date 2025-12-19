@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  role_name: ml_frameworks
+  author: ML DevOps Team
+  description: Install ML/DL frameworks (PyTorch, TensorFlow, scikit-learn, etc.)
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - machinelearning
+    - deeplearning
+    - pytorch
+    - tensorflow
+    - scikitlearn
+    - ml
+
+dependencies:
+  - role: python_ml_base

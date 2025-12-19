@@ -1,0 +1,65 @@
+---
+ml_frameworks_numpy_stack_packages:
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - seaborn
+  - plotly
+
+ml_frameworks_scikit_learn_packages:
+  - scikit-learn
+  - scikit-image
+  - imbalanced-learn
+  - category-encoders
+
+ml_frameworks_pytorch_packages:
+  - torch
+  - torchvision
+  - torchaudio
+
+ml_frameworks_tensorflow_packages:
+  - tensorflow
+  - keras
+
+ml_frameworks_tensorflow_dataset_packages:
+  - tensorflow-datasets
+
+ml_frameworks_xgboost_packages:
+  - xgboost
+
+ml_frameworks_lightgbm_packages:
+  - lightgbm
+
+ml_frameworks_catboost_packages:
+  - catboost
+
+ml_frameworks_nlp_packages:
+  - transformers
+  - tokenizers
+  - datasets
+  - sentencepiece
+
+ml_frameworks_spacy_packages:
+  - spacy
+
+ml_frameworks_nltk_packages_pip:
+  - nltk
+
+ml_frameworks_cv_packages:
+  - opencv-python
+  - pillow
+  - imageio
+  - albumentations
+
+ml_frameworks_onnx_packages:
+  - onnx
+  - onnxruntime
+  - tf2onnx
+
+ml_frameworks_ml_utility_packages:
+  - tqdm
+  - joblib
+  - networkx
+  - graphviz
+  - pydot

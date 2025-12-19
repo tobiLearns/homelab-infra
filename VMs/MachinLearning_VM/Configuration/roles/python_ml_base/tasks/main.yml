@@ -1,0 +1,170 @@
+---
+# roles/python_ml_base/tasks/main.yml
+
+- name: Ensure we're running on a supported distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+      - ansible_distribution in ["Ubuntu", "Debian"]
+    fail_msg: "This role only supports Ubuntu and Debian distributions"
+
+- name: Install system Python packages
+  ansible.builtin.apt:
+    name: "{{ python_ml_base_python_packages_system }}"
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install system build tools
+  ansible.builtin.apt:
+    name: "{{ python_ml_base_system_build_tools }}"
+    state: present
+  become: true
+
+- name: Install ML system libraries
+  ansible.builtin.apt:
+    name: "{{ python_ml_base_system_ml_libraries }}"
+    state: present
+  become: true
+
+- name: Upgrade pip to latest version
+  ansible.builtin.pip:
+    name: pip
+    state: present
+    extra_args: --upgrade
+    executable: pip3
+  become: true
+
+- name: Install pyenv dependencies
+  ansible.builtin.apt:
+    name: "{{ python_ml_base_pyenv_dependencies }}"
+    state: present
+  become: true
+  when: python_ml_base_install_pyenv | bool
+
+- name: Check if pyenv is already installed
+  ansible.builtin.stat:
+    path: "{{ python_ml_base_pyenv_root }}"
+  register: python_ml_base_pyenv_stat
+  when: python_ml_base_install_pyenv | bool
+
+- name: Download pyenv installer
+  ansible.builtin.get_url:
+    url: "{{ python_ml_base_pyenv_installer_url }}"
+    dest: /tmp/pyenv-installer.sh
+    mode: '0755'
+  when:
+    - python_ml_base_install_pyenv | bool
+    - not python_ml_base_pyenv_stat.stat.exists
+
+- name: Install pyenv
+  ansible.builtin.command: bash /tmp/pyenv-installer.sh
+  args:
+    creates: "{{ python_ml_base_pyenv_root }}/bin/pyenv"
+  when:
+    - python_ml_base_install_pyenv | bool
+    - not python_ml_base_pyenv_stat.stat.exists
+
+- name: Clean up pyenv installer
+  ansible.builtin.file:
+    path: /tmp/pyenv-installer.sh
+    state: absent
+  when: python_ml_base_install_pyenv | bool
+
+- name: Configure pyenv in shell
+  ansible.builtin.blockinfile:
+    path: "{{ python_ml_base_shell_config_file }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - pyenv"
+    block: |
+      export PYENV_ROOT="{{ python_ml_base_pyenv_root }}"
+      export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+      eval "$(pyenv virtualenv-init -)"
+    create: true
+    mode: '0644'
+  when:
+    - python_ml_base_install_pyenv | bool
+    - python_ml_base_configure_bashrc | bool
+
+- name: Download Miniconda installer
+  ansible.builtin.get_url:
+    url: "{{ python_ml_base_miniconda_installer_url }}"
+    dest: /tmp/miniconda.sh
+    mode: '0755'
+  when: python_ml_base_install_conda | bool
+
+- name: Check if conda is already installed
+  ansible.builtin.stat:
+    path: "{{ python_ml_base_conda_install_path }}"
+  register: python_ml_base_conda_stat
+  when: python_ml_base_install_conda | bool
+
+- name: Install Miniconda
+  ansible.builtin.command: bash /tmp/miniconda.sh -b -p {{ python_ml_base_conda_install_path }}
+  args:
+    creates: "{{ python_ml_base_conda_install_path }}/bin/conda"
+  when:
+    - python_ml_base_install_conda | bool
+    - not python_ml_base_conda_stat.stat.exists
+
+- name: Initialize conda for bash
+  ansible.builtin.command: "{{ python_ml_base_conda_install_path }}/bin/conda init bash"
+  args:
+    creates: "{{ python_ml_base_shell_config_file }}"
+  when:
+    - python_ml_base_install_conda | bool
+    - not python_ml_base_conda_stat.stat.exists
+  changed_when: true
+
+- name: Install mamba in base environment
+  ansible.builtin.command: "{{ python_ml_base_conda_install_path }}/bin/conda install -y -c conda-forge mamba"
+  args:
+    creates: "{{ python_ml_base_conda_install_path }}/bin/mamba"
+  when:
+    - python_ml_base_install_conda | bool
+    - python_ml_base_install_mamba | bool
+    - not python_ml_base_conda_stat.stat.exists
+  changed_when: true
+- name: Clean up Miniconda installer
+  ansible.builtin.file:
+    path: /tmp/miniconda.sh
+    state: absent
+  when: python_ml_base_install_conda | bool
+
+- name: Download Poetry installer
+  ansible.builtin.get_url:
+    url: "{{ python_ml_base_poetry_installer_url }}"
+    dest: /tmp/install-poetry.py
+    mode: '0755'
+  when:
+    - python_ml_base_install_poetry | bool
+
+- name: Install Poetry
+  ansible.builtin.command: python3 /tmp/install-poetry.py
+  args:
+    creates: "{{ python_ml_base_poetry_home }}/bin/poetry"
+  when: python_ml_base_install_poetry | bool
+
+- name: Clean up Poetry installer
+  ansible.builtin.file:
+    path: /tmp/install-poetry.py
+    state: absent
+  when: python_ml_base_install_poetry | bool
+
+- name: Add Poetry to PATH in shell
+  ansible.builtin.lineinfile:
+    path: "{{ python_ml_base_shell_config_file }}"
+    line: 'export PATH="{{ python_ml_base_poetry_home }}/bin:$PATH"'
+    state: present
+    create: true
+    mode: '0644'
+  when:
+    - python_ml_base_install_poetry | bool
+    - python_ml_base_configure_bashrc | bool
+
+- name: Install basic Python development tools
+  ansible.builtin.pip:
+    name: "{{ python_ml_base_python_dev_tools }}"
+    state: present
+    executable: pip3
+  become: true

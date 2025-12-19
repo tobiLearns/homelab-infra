@@ -1,0 +1,46 @@
+---
+ml_tools_dvc_packages:
+  - dvc
+  - dvc-gs
+  - dvc-s3
+
+ml_tools_mlflow_packages:
+  - mlflow
+  - mlflow-skinny
+
+ml_tools_wandb_packages:
+  - wandb
+
+ml_tools_tensorboard_packages:
+  - tensorboard
+  - tensorboardX
+
+ml_tools_optuna_packages:
+  - optuna
+  - optuna-dashboard
+
+ml_tools_ray_packages:
+  - "ray[tune]"
+  - "ray[rllib]"
+
+ml_tools_data_validation_packages:
+  - great-expectations
+  - pandera
+  - pydantic
+
+ml_tools_profiling_packages:
+  - memory-profiler
+  - line-profiler
+  - py-spy
+  - snakeviz
+
+ml_tools_monitoring_packages:
+  - psutil
+
+ml_tools_directories:
+  - "{{ ml_tools_workspace_root }}/configs"
+  - "{{ ml_tools_workspace_root }}/datasets"
+  - "{{ ml_tools_workspace_root }}/models"
+  - "{{ ml_tools_workspace_root }}/experiments"
+  - "{{ ml_tools_workspace_root }}/scripts"
+  - "{{ ml_tools_workspace_root }}/notebooks"

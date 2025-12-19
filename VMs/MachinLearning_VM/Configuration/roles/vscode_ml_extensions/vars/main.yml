@@ -1,0 +1,70 @@
+---
+vscode_ml_extensions_python_extensions:
+  - ms-python.python
+  - ms-python.vscode-pylance
+  - ms-python.debugpy
+
+vscode_ml_extensions_jupyter_extensions:
+  - ms-toolsai.jupyter
+  - ms-toolsai.jupyter-keymap
+  - ms-toolsai.jupyter-renderers
+  - ms-toolsai.vscode-jupyter-cell-tags
+  - ms-toolsai.vscode-jupyter-slideshow
+
+vscode_ml_extensions_linting_extensions:
+  - charliermarsh.ruff
+  - njpwerner.autodocstring
+  - kevinrose.vsc-python-indent
+  - donjayamanne.python-environment-manager
+
+vscode_ml_extensions_formatting_extensions:
+  - tamasfe.even-better-toml
+  - redhat.vscode-yaml
+  - yzhang.markdown-all-in-one
+
+vscode_ml_extensions_git_extensions:
+  - eamodio.gitlens
+  - mhutchie.git-graph
+
+vscode_ml_extensions_docker_extensions:
+  - ms-azuretools.vscode-docker
+
+vscode_ml_extensions_remote_extensions:
+  - ms-vscode-remote.remote-ssh
+  - ms-vscode-remote.remote-containers
+
+vscode_ml_extensions_settings_template:
+  python:
+    defaultInterpreterPath: "{{ vscode_ml_extensions_python_default_interpreter }}"
+    linting:
+      enabled: "{{ vscode_ml_extensions_python_linting_enabled }}"
+      pylintEnabled: "{{ vscode_ml_extensions_python_linter == 'pylint' }}"
+      flake8Enabled: "{{ vscode_ml_extensions_python_linter == 'flake8' }}"
+    formatting:
+      provider: "{{ vscode_ml_extensions_python_formatter }}"
+      blackArgs: ["--line-length", "{{ vscode_ml_extensions_python_line_length }}"]
+    analysis:
+      typeCheckingMode: "{{ vscode_ml_extensions_python_type_checking }}"
+  jupyter:
+    askForKernelRestart: "{{ vscode_ml_extensions_jupyter_kernel_restart_prompt }}"
+    interactiveWindow:
+      textEditor:
+        executeSelection: "{{ vscode_ml_extensions_jupyter_execute_selection }}"
+  files:
+    watcherExclude:
+      "**/.git/objects/**": true
+      "**/.git/subtree-cache/**": true
+      "**/node_modules/*/**": true
+      "**/__pycache__/**": true
+      "**/.pytest_cache/**": true
+      "**/.mypy_cache/**": true
+      "**/venv/**": true
+      "**/.venv/**": true
+  editor:
+    formatOnSave: "{{ vscode_ml_extensions_editor_format_on_save }}"
+    codeActionsOnSave:
+      "source.organizeImports": "{{ vscode_ml_extensions_editor_organize_imports_on_save }}"
+    rulers: ["{{ vscode_ml_extensions_python_line_length }}"]
+  terminal:
+    integrated:
+      scrollback: 10000

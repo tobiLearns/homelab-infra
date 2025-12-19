@@ -1,0 +1,162 @@
+---
+- name: Check if VS Code is installed
+  ansible.builtin.command: which code
+  register: vscode_ml_extensions_vscode_check
+  failed_when: false
+  changed_when: false
+  when: vscode_ml_extensions_installed_check | bool
+
+- name: Fail if VS Code is not installed
+  ansible.builtin.fail:
+    msg: "VS Code is not installed. Please install VS Code first."
+  when:
+    - vscode_ml_extensions_installed_check | bool
+    - vscode_ml_extensions_vscode_check.rc != 0
+
+- name: Install Python extensions for VS Code
+  ansible.builtin.command: code --install-extension {{ item }}
+  loop: "{{ vscode_ml_extensions_python_extensions }}"
+  register: vscode_ml_extensions_python_ext_result
+  changed_when: "'already installed' not in vscode_ml_extensions_python_ext_result.stdout"
+  failed_when: false
+  when: vscode_ml_extensions_install_python_extensions | bool
+
+- name: Install Jupyter extensions for VS Code
+  ansible.builtin.command: code --install-extension {{ item }}
+  loop: "{{ vscode_ml_extensions_jupyter_extensions }}"
+  register: vscode_ml_extensions_jupyter_ext_result
+  changed_when: "'already installed' not in vscode_ml_extensions_jupyter_ext_result.stdout"
+  failed_when: false
+  when: vscode_ml_extensions_install_jupyter_extensions | bool
+
+- name: Install linting and formatting extensions
+  ansible.builtin.command: code --install-extension {{ item }}
+  loop: "{{ vscode_ml_extensions_linting_extensions + vscode_ml_extensions_formatting_extensions }}"
+  register: vscode_ml_extensions_linting_ext_result
+  changed_when: "'already installed' not in vscode_ml_extensions_linting_ext_result.stdout"
+  failed_when: false
+  when: vscode_ml_extensions_install_linting_extensions | bool
+
+- name: Install Git extensions for VS Code
+  ansible.builtin.command: code --install-extension {{ item }}
+  loop: "{{ vscode_ml_extensions_git_extensions }}"
+  register: vscode_ml_extensions_git_ext_result
+  changed_when: "'already installed' not in vscode_ml_extensions_git_ext_result.stdout"
+  failed_when: false
+  when: vscode_ml_extensions_install_git_extensions | bool
+
+- name: Install Docker extension for VS Code
+  ansible.builtin.command: code --install-extension {{ item }}
+  loop: "{{ vscode_ml_extensions_docker_extensions }}"
+  register: vscode_ml_extensions_docker_ext_result
+  changed_when: "'already installed' not in vscode_ml_extensions_docker_ext_result.stdout"
+  failed_when: false
+  when: vscode_ml_extensions_install_docker_extensions | bool
+
+- name: Install Remote development extensions
+  ansible.builtin.command: code --install-extension {{ item }}
+  loop: "{{ vscode_ml_extensions_remote_extensions }}"
+  register: vscode_ml_extensions_remote_ext_result
+  changed_when: "'already installed' not in vscode_ml_extensions_remote_ext_result.stdout"
+  failed_when: false
+  when: vscode_ml_extensions_install_remote_extensions | bool
+
+- name: Create VS Code User settings directory
+  ansible.builtin.file:
+    path: "{{ vscode_ml_extensions_config_dir }}"
+    state: directory
+    mode: '0755'
+  when: vscode_ml_extensions_configure_vscode_settings | bool
+
+- name: Check if VS Code settings file exists
+  ansible.builtin.stat:
+    path: "{{ vscode_ml_extensions_config_dir }}/settings.json"
+  register: vscode_ml_extensions_settings_stat
+  when: vscode_ml_extensions_configure_vscode_settings | bool
+
+- name: Read existing VS Code settings
+  ansible.builtin.slurp:
+    src: "{{ vscode_ml_extensions_config_dir }}/settings.json"
+  register: vscode_ml_extensions_existing_settings
+  when:
+    - vscode_ml_extensions_configure_vscode_settings | bool
+    - vscode_ml_extensions_settings_stat.stat.exists
+  failed_when: false
+
+- name: Parse existing settings
+  ansible.builtin.set_fact:
+    vscode_ml_extensions_current_settings: "{{ vscode_ml_extensions_existing_settings.content | b64decode | from_json }}"
+  when:
+    - vscode_ml_extensions_configure_vscode_settings | bool
+    - vscode_ml_extensions_settings_stat.stat.exists
+    - vscode_ml_extensions_existing_settings is succeeded
+  failed_when: false
+
+- name: Merge VS Code settings
+  ansible.builtin.set_fact:
+    vscode_ml_extensions_merged_settings:
+      "{{ vscode_ml_extensions_current_settings | default({}) | combine(vscode_ml_extensions_settings_template, recursive=true) }}"
+  when: vscode_ml_extensions_configure_vscode_settings | bool
+
+- name: Write VS Code settings
+  ansible.builtin.copy:
+    dest: "{{ vscode_ml_extensions_config_dir }}/settings.json"
+    content: "{{ vscode_ml_extensions_merged_settings | to_nice_json }}"
+    mode: '0644'
+  when: vscode_ml_extensions_configure_vscode_settings | bool
+
+- name: Create VS Code snippets directory
+  ansible.builtin.file:
+    path: "{{ vscode_ml_extensions_config_dir }}/snippets"
+    state: directory
+    mode: '0755'
+  when: vscode_ml_extensions_configure_vscode_settings | bool
+
+- name: Create Python ML snippets
+  ansible.builtin.copy:
+    dest: "{{ vscode_ml_extensions_config_dir }}/snippets/python.json"
+    content: |
+      {
+        "Import ML Libraries": {
+          "prefix": "importsml",
+          "body": [
+            "import numpy as np",
+            "import pandas as pd",
+            "import matplotlib.pyplot as plt",
+            "import seaborn as sns",
+            "from sklearn.model_selection import train_test_split",
+            "$0"
+          ],
+          "description": "Import common ML libraries"
+        },
+        "PyTorch Setup": {
+          "prefix": "torchsetup",
+          "body": [
+            "import torch",
+            "import torch.nn as nn",
+            "import torch.optim as optim",
+            "from torch.utils.data import DataLoader, Dataset",
+            "",
+            "device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')",
+            "print(f'Using device: {device}')",
+            "$0"
+          ],
+          "description": "Basic PyTorch setup"
+        },
+        "TensorFlow Setup": {
+          "prefix": "tfsetup",
+          "body": [
+            "import tensorflow as tf",
+            "from tensorflow import keras",
+            "from tensorflow.keras import layers",
+            "",
+            "print(f'TensorFlow version: {tf.__version__}')",
+            "print(f'GPU available: {tf.config.list_physical_devices(\"GPU\")}')",
+            "$0"
+          ],
+          "description": "Basic TensorFlow setup"
+        }
+      }
+    mode: '0644'
+    force: false
+  when: vscode_ml_extensions_configure_vscode_settings | bool

@@ -1,0 +1,152 @@
+---
+- name: Install NumPy and scientific computing stack
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_numpy_stack_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_frameworks_install_numpy_stack | bool
+
+- name: Install scikit-learn and preprocessing tools
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_scikit_learn_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_frameworks_install_scikit_learn | bool
+
+- name: Install PyTorch (CPU version)
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_pytorch_packages }}"
+    extra_args: "--index-url {{ ml_frameworks_pytorch_channel }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_frameworks_install_pytorch | bool
+
+- name: Install TensorFlow
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_tensorflow_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_frameworks_install_tensorflow | bool
+
+- name: Install TensorFlow Datasets
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_tensorflow_dataset_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_tensorflow | bool
+    - ml_frameworks_install_tensorflow_datasets | bool
+
+- name: Install XGBoost
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_xgboost_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_gradient_boosting | bool
+    - ml_frameworks_install_xgboost | bool
+
+- name: Install LightGBM
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_lightgbm_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_gradient_boosting | bool
+    - ml_frameworks_install_lightgbm | bool
+
+- name: Install CatBoost
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_catboost_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_gradient_boosting | bool
+    - ml_frameworks_install_catboost | bool
+
+- name: Install NLP base packages
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_nlp_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_nlp_tools | bool
+    - ml_frameworks_install_transformers | bool
+
+- name: Install spaCy
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_spacy_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_nlp_tools | bool
+    - ml_frameworks_install_spacy | bool
+
+- name: Install NLTK
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_nltk_packages_pip }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_nlp_tools | bool
+    - ml_frameworks_install_nltk | bool
+
+- name: Install computer vision libraries
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_cv_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - ml_frameworks_install_computer_vision | bool
+    - ml_frameworks_install_opencv | bool
+
+- name: Install ONNX for model interoperability
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_onnx_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_frameworks_install_onnx | bool
+
+- name: Install additional ML utilities
+  ansible.builtin.pip:
+    name: "{{ ml_frameworks_ml_utility_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_frameworks_install_ml_utilities | bool
+
+- name: Download spaCy language model  # noqa: no-changed-when
+  ansible.builtin.command: python3 -m spacy download {{ ml_frameworks_spacy_model }}
+  become: true
+  when:
+    - ml_frameworks_install_nlp_tools | bool
+    - ml_frameworks_install_spacy | bool
+  register: ml_frameworks_spacy_download_result
+  changed_when: "'already satisfied' not in ml_frameworks_spacy_download_result.stdout"
+  failed_when: false
+
+- name: Download NLTK data  # noqa: no-changed-when
+  ansible.builtin.command: >
+    python3 -c "import nltk;
+    {% for pkg in ml_frameworks_nltk_packages %}nltk.download('{{ pkg }}'); {% endfor %}"
+  become: true
+  when:
+    - ml_frameworks_install_nlp_tools | bool
+    - ml_frameworks_install_nltk | bool
+    - ml_frameworks_download_nltk_data | bool
+  register: ml_frameworks_nltk_download_result
+  changed_when: "'already up-to-date' not in ml_frameworks_nltk_download_result.stdout"
+  failed_when: false

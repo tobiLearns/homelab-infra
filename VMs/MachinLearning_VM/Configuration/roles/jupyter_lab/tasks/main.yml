@@ -1,0 +1,150 @@
+---
+- name: Install JupyterLab and Notebook
+  ansible.builtin.pip:
+    name: "{{ jupyter_lab_base_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: jupyter_lab_install_jupyterlab | bool
+
+- name: Install Jupyter extensions base
+  ansible.builtin.pip:
+    name: "{{ jupyter_lab_extension_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - jupyter_lab_install_jupyterlab | bool
+    - jupyter_lab_install_jupyter_extensions | bool
+
+- name: Install JupyterLab Git extension
+  ansible.builtin.pip:
+    name: "{{ jupyter_lab_git_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - jupyter_lab_install_jupyterlab | bool
+    - jupyter_lab_install_jupyter_extensions | bool
+    - jupyter_lab_install_jupyterlab_git | bool
+
+- name: Install JupyterLab LSP support
+  ansible.builtin.pip:
+    name: "{{ jupyter_lab_lsp_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - jupyter_lab_install_jupyterlab | bool
+    - jupyter_lab_install_jupyter_extensions | bool
+    - jupyter_lab_install_lsp | bool
+
+- name: Install Jupyter visualization extensions
+  ansible.builtin.pip:
+    name: "{{ jupyter_lab_viz_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - jupyter_lab_install_jupyterlab | bool
+    - jupyter_lab_install_visualization_extensions | bool
+
+- name: Enable Jupyter widgets extension  # noqa: no-changed-when
+  ansible.builtin.command: jupyter nbextension enable --py widgetsnbextension --sys-prefix
+  become: true
+  when:
+    - jupyter_lab_install_jupyterlab | bool
+    - jupyter_lab_install_ipywidgets | bool
+  register: jupyter_lab_widget_enable_result
+  changed_when: "'already enabled' not in jupyter_lab_widget_enable_result.stdout"
+  failed_when: false
+
+- name: Create Jupyter config directory
+  ansible.builtin.file:
+    path: "{{ jupyter_lab_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if Jupyter config exists
+  ansible.builtin.stat:
+    path: "{{ jupyter_lab_config_dir }}/jupyter_lab_config.py"
+  register: jupyter_lab_config_stat
+
+- name: Generate Jupyter config
+  ansible.builtin.command: jupyter lab --generate-config
+  args:
+    creates: "{{ jupyter_lab_config_dir }}/jupyter_lab_config.py"
+  when:
+    - jupyter_lab_generate_jupyter_config | bool
+    - not jupyter_lab_config_stat.stat.exists
+  changed_when: true
+
+- name: Configure JupyterLab settings
+  ansible.builtin.blockinfile:
+    path: "{{ jupyter_lab_config_dir }}/jupyter_lab_config.py"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - JupyterLab config"
+    block: |
+      c.ServerApp.ip = '{{ jupyter_lab_ip }}'
+      c.ServerApp.open_browser = {{ jupyter_lab_open_browser | lower }}
+      c.ServerApp.port = {{ jupyter_lab_port }}
+      c.ServerApp.allow_remote_access = {{ jupyter_lab_allow_remote_access | lower }}
+      {% if not jupyter_lab_enable_authentication %}
+      c.ServerApp.token = '{{ jupyter_lab_token }}'
+      c.ServerApp.password = '{{ jupyter_lab_password }}'
+      {% endif %}
+    create: true
+    mode: '0644'
+  notify: Reload jupyterlab config
+
+- name: Create notebooks directory
+  ansible.builtin.file:
+    path: "{{ jupyter_lab_workspace_dir }}"
+    state: directory
+    mode: '0755'
+  when: jupyter_lab_create_workspace_dirs | bool
+
+- name: Create ML workspace directory
+  ansible.builtin.file:
+    path: "{{ jupyter_lab_ml_workspace_dir }}"
+    state: directory
+    mode: '0755'
+  when: jupyter_lab_create_workspace_dirs | bool
+
+- name: Create ML workspace subdirectories
+  ansible.builtin.file:
+    path: "{{ jupyter_lab_ml_workspace_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - datasets
+    - models
+    - configs
+    - experiments
+    - scripts
+  when: jupyter_lab_create_workspace_dirs | bool
+
+- name: Create systemd user directory
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/systemd/user"
+    state: directory
+    mode: '0755'
+  when: jupyter_lab_create_systemd_service | bool
+
+- name: Create systemd service for JupyterLab
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/systemd/user/jupyterlab.service"
+    content: "{{ jupyter_lab_systemd_service_template }}"
+    mode: '0644'
+  when: jupyter_lab_create_systemd_service | bool
+  notify: Restart jupyterlab
+
+- name: Enable and start JupyterLab service
+  ansible.builtin.systemd:
+    name: jupyterlab
+    enabled: true
+    state: started
+    scope: user
+    daemon_reload: true
+  when:
+    - jupyter_lab_create_systemd_service | bool
+    - jupyter_lab_enable_systemd_service | bool

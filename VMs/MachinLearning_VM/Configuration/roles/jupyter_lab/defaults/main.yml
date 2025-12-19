@@ -1,0 +1,33 @@
+---
+# Jupyter installation options
+jupyter_lab_install_jupyterlab: true
+jupyter_lab_install_jupyter_notebook: true
+jupyter_lab_install_jupyter_extensions: true
+
+# JupyterLab configuration
+jupyter_lab_port: 8888
+jupyter_lab_ip: "0.0.0.0"
+jupyter_lab_open_browser: false
+jupyter_lab_allow_remote_access: true
+jupyter_lab_enable_authentication: false  # Set to true for production!
+jupyter_lab_token: ""  # Set a token for authentication
+jupyter_lab_password: ""  # Or set a hashed password
+
+# Workspace directories
+jupyter_lab_workspace_dir: "{{ ansible_env.HOME }}/notebooks"
+jupyter_lab_ml_workspace_dir: "{{ ansible_env.HOME }}/ml-workspace"
+jupyter_lab_create_workspace_dirs: true
+
+# Extensions
+jupyter_lab_install_ipywidgets: true
+jupyter_lab_install_visualization_extensions: true
+jupyter_lab_install_jupyterlab_git: true
+jupyter_lab_install_lsp: true
+
+# Systemd service
+jupyter_lab_create_systemd_service: false  # Set to true if you want auto-start
+jupyter_lab_enable_systemd_service: false
+
+# Configuration
+jupyter_lab_generate_jupyter_config: true
+jupyter_lab_config_dir: "{{ ansible_env.HOME }}/.jupyter"

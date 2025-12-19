@@ -1,0 +1,12 @@
+---
+- name: Restart jupyterlab
+  ansible.builtin.systemd:
+    name: jupyterlab
+    state: restarted
+    scope: user
+    daemon_reload: true
+  when: jupyter_lab_create_systemd_service | bool
+
+- name: Reload jupyterlab config
+  ansible.builtin.debug:
+    msg: "JupyterLab config updated. Restart JupyterLab manually if it's running."

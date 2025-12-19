@@ -1,0 +1,37 @@
+---
+databases_sqlite_packages:
+  - sqlite3
+  - libsqlite3-dev
+
+databases_postgresql_packages:
+  - postgresql-client
+  - libpq-dev
+
+databases_mysql_packages:
+  - mysql-client
+  - libmysqlclient-dev
+
+databases_mongodb_packages:
+  - mongodb-clients
+
+databases_redis_packages:
+  - redis-tools
+
+databases_python_postgresql_packages:
+  - psycopg2-binary
+
+databases_python_mysql_packages:
+  - mysqlclient
+  - pymysql
+
+databases_python_mongodb_packages:
+  - pymongo
+
+databases_python_redis_packages:
+  - redis
+
+databases_python_sqlalchemy_packages:
+  - sqlalchemy
+
+databases_python_alembic_packages:
+  - alembic

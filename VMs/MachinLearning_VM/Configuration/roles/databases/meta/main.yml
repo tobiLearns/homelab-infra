@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  role_name: databases
+  author: ML DevOps Team
+  description: Install database clients and Python database libraries
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - database
+    - postgresql
+    - mysql
+    - mongodb
+    - redis
+    - sqlite
+
+dependencies:
+  - role: python_ml_base

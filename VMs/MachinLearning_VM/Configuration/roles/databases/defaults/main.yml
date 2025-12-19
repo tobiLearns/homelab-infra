@@ -1,0 +1,21 @@
+---
+# Database client installation
+databases_install_sqlite: true
+databases_install_postgresql_client: true
+databases_install_mysql_client: false
+databases_install_mongodb_client: false
+databases_install_redis_client: false
+
+# Python database libraries
+databases_install_python_libs: true
+databases_install_sqlalchemy: true
+databases_install_alembic: false  # Database migrations
+
+# PostgreSQL configuration
+databases_postgresql_install_dev_headers: true
+
+# MySQL configuration
+databases_mysql_install_dev_headers: false
+
+# MongoDB configuration
+databases_mongodb_install_compass: false  # GUI tool

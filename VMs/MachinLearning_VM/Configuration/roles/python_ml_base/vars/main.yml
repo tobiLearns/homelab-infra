@@ -1,0 +1,24 @@
+---
+# roles/python_ml_base/vars/main.yml
+
+# These are fixed internal variables that should not be overridden
+
+python_ml_base_pyenv_dependencies:
+  - make
+  - libssl-dev
+  - zlib1g-dev
+  - libbz2-dev
+  - libreadline-dev
+  - libsqlite3-dev
+  - llvm
+  - libncursesw5-dev
+  - xz-utils
+  - tk-dev
+  - libxml2-dev
+  - libxmlsec1-dev
+  - libffi-dev
+  - liblzma-dev
+
+python_ml_base_miniconda_installer_url: "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+python_ml_base_poetry_installer_url: "https://install.python-poetry.org"
+python_ml_base_pyenv_installer_url: "https://pyenv.run"

@@ -1,0 +1,28 @@
+---
+galaxy_info:
+  role_name: jupyter_lab
+  author: ML DevOps Team
+  description: Install and configure JupyterLab for ML development
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - jupyter
+    - jupyterlab
+    - notebook
+    - datascience
+    - machinelearning
+
+dependencies:
+  - role: python_ml_base

@@ -1,0 +1,124 @@
+---
+- name: Install SQLite
+  ansible.builtin.apt:
+    name: "{{ databases_sqlite_packages }}"
+    state: present
+  become: true
+  when: databases_install_sqlite | bool
+
+- name: Install PostgreSQL client and dev headers
+  ansible.builtin.apt:
+    name: "{{ databases_postgresql_packages }}"
+    state: present
+  become: true
+  when: databases_install_postgresql_client | bool
+
+- name: Install MySQL client and dev headers
+  ansible.builtin.apt:
+    name: "{{ databases_mysql_packages }}"
+    state: present
+  become: true
+  when: databases_install_mysql_client | bool
+
+- name: Check if MongoDB repository is available
+  ansible.builtin.command: apt-cache search mongodb-clients
+  register: databases_mongodb_repo_check
+  changed_when: false
+  failed_when: false
+  when: databases_install_mongodb_client | bool
+
+- name: Install MongoDB client tools
+  ansible.builtin.apt:
+    name: "{{ databases_mongodb_packages }}"
+    state: present
+  become: true
+  when:
+    - databases_install_mongodb_client | bool
+    - databases_mongodb_repo_check.stdout | length > 0
+  register: databases_mongodb_install_result
+
+- name: Warn if MongoDB client not available
+  ansible.builtin.debug:
+    msg: "WARNING: MongoDB client tools not available in system repositories. Consider adding MongoDB repository manually."
+  when:
+    - databases_install_mongodb_client | bool
+    - databases_mongodb_repo_check.stdout | length == 0
+
+- name: Install Redis client tools
+  ansible.builtin.apt:
+    name: "{{ databases_redis_packages }}"
+    state: present
+  become: true
+  when: databases_install_redis_client | bool
+
+- name: Install PostgreSQL Python library
+  ansible.builtin.pip:
+    name: "{{ databases_python_postgresql_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - databases_install_python_libs | bool
+    - databases_install_postgresql_client | bool
+
+- name: Install MySQL Python libraries
+  ansible.builtin.pip:
+    name: "{{ databases_python_mysql_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - databases_install_python_libs | bool
+    - databases_install_mysql_client | bool
+
+- name: Install MongoDB Python library
+  ansible.builtin.pip:
+    name: "{{ databases_python_mongodb_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - databases_install_python_libs | bool
+    - databases_install_mongodb_client | bool
+
+- name: Install Redis Python library
+  ansible.builtin.pip:
+    name: "{{ databases_python_redis_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - databases_install_python_libs | bool
+    - databases_install_redis_client | bool
+
+- name: Install SQLAlchemy
+  ansible.builtin.pip:
+    name: "{{ databases_python_sqlalchemy_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - databases_install_python_libs | bool
+    - databases_install_sqlalchemy | bool
+
+- name: Install Alembic for database migrations
+  ansible.builtin.pip:
+    name: "{{ databases_python_alembic_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when:
+    - databases_install_python_libs | bool
+    - databases_install_alembic | bool
+
+- name: Display installed database tools
+  ansible.builtin.debug:
+    msg: |
+      Database tools installed:
+      {% if databases_install_sqlite %}- SQLite{% endif %}
+      {% if databases_install_postgresql_client %}- PostgreSQL client{% endif %}
+      {% if databases_install_mysql_client %}- MySQL client{% endif %}
+      {% if databases_install_mongodb_client %}- MongoDB client{% endif %}
+      {% if databases_install_redis_client %}- Redis client{% endif %}
+      {% if databases_install_sqlalchemy %}- SQLAlchemy ORM{% endif %}
+  when: databases_install_python_libs | bool

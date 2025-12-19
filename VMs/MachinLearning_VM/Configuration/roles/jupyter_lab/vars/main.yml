@@ -1,0 +1,40 @@
+---
+jupyter_lab_base_packages:
+  - jupyterlab
+  - notebook
+  - jupyter
+  - ipykernel
+
+jupyter_lab_extension_packages:
+  - ipywidgets
+  - jupyter-contrib-nbextensions
+  - jupytext
+
+jupyter_lab_git_packages:
+  - jupyterlab-git
+
+jupyter_lab_lsp_packages:
+  - jupyterlab-lsp
+  - python-lsp-server
+
+jupyter_lab_viz_packages:
+  - plotly
+  - bokeh
+  - altair
+  - ipympl
+
+jupyter_lab_systemd_service_template: |
+  [Unit]
+  Description=JupyterLab Server
+  After=network.target
+
+  [Service]
+  Type=simple
+  ExecStart={{ ansible_env.HOME }}/.local/bin/jupyter-lab --config={{ jupyter_lab_config_dir }}/jupyter_lab_config.py
+  WorkingDirectory={{ jupyter_lab_workspace_dir }}
+  Restart=on-failure
+  RestartSec=10
+  User={{ ansible_user_id }}
+
+  [Install]
+  WantedBy=default.target

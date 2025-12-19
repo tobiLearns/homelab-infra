@@ -1,0 +1,55 @@
+---
+# roles/python_ml_base/defaults/main.yml
+
+# Python configuration
+python_ml_base_python_version: "3.11"
+python_ml_base_python_packages_system:
+  - python3
+  - python3-pip
+  - python3-venv
+  - python3-dev
+
+# pyenv configuration
+python_ml_base_install_pyenv: true
+python_ml_base_pyenv_root: "{{ ansible_env.HOME }}/.pyenv"
+
+# Conda configuration
+python_ml_base_install_conda: true
+python_ml_base_conda_type: "miniconda"  # miniconda or anaconda
+python_ml_base_conda_version: "latest"
+python_ml_base_conda_install_path: "{{ ansible_env.HOME }}/miniconda3"
+python_ml_base_install_mamba: true
+
+# Poetry configuration
+python_ml_base_install_poetry: true
+python_ml_base_poetry_version: "latest"
+python_ml_base_poetry_home: "{{ ansible_env.HOME }}/.local"
+
+# System dependencies
+python_ml_base_system_build_tools:
+  - cmake
+  # Following packages are already contained in task "Install essential packages" from standard config:
+  # - build-essential
+  # - git
+  # - curl
+  # - wget
+
+python_ml_base_system_ml_libraries:
+  - libhdf5-dev
+  - libopenblas-dev
+  - libatlas-base-dev
+  - graphviz
+
+# Basic Python tools
+python_ml_base_python_dev_tools:
+  - virtualenv
+  - pipenv
+  - black
+  - flake8
+  - mypy
+  - pytest
+  - ipython
+
+# Shell configuration
+python_ml_base_configure_bashrc: true
+python_ml_base_shell_config_file: "{{ ansible_env.HOME }}/.bashrc"

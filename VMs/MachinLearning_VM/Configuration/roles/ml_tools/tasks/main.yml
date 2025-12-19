@@ -1,0 +1,134 @@
+---
+- name: Install DVC (Data Version Control)
+  ansible.builtin.pip:
+    name: "{{ ml_tools_dvc_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_dvc | bool
+
+- name: Install MLflow for experiment tracking
+  ansible.builtin.pip:
+    name: "{{ ml_tools_mlflow_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_mlflow | bool
+
+- name: Install Weights & Biases
+  ansible.builtin.pip:
+    name: "{{ ml_tools_wandb_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_wandb | bool
+
+- name: Install TensorBoard
+  ansible.builtin.pip:
+    name: "{{ ml_tools_tensorboard_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_tensorboard | bool
+
+- name: Install Optuna for hyperparameter optimization
+  ansible.builtin.pip:
+    name: "{{ ml_tools_optuna_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_optuna | bool
+
+- name: Install Ray for distributed computing
+  ansible.builtin.pip:
+    name: "{{ ml_tools_ray_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_ray | bool
+
+- name: Install data validation tools
+  ansible.builtin.pip:
+    name: "{{ ml_tools_data_validation_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_data_validation | bool
+
+- name: Install profiling and debugging tools
+  ansible.builtin.pip:
+    name: "{{ ml_tools_profiling_packages }}"
+    state: present
+    executable: pip3
+  become: true
+  when: ml_tools_install_profiling_tools | bool
+
+- name: Install monitoring tools
+  ansible.builtin.pip:
+    name: "{{ ml_tools_monitoring_packages }}"
+    state: present
+    executable: pip3
+  become: true
+
+- name: Create DVC cache directory
+  ansible.builtin.file:
+    path: "{{ ml_tools_dvc_cache_dir }}"
+    state: directory
+    mode: '0755'
+  when: ml_tools_install_dvc | bool
+
+- name: Create MLflow tracking directory
+  ansible.builtin.file:
+    path: "{{ ml_tools_mlflow_tracking_dir }}"
+    state: directory
+    mode: '0755'
+  when: ml_tools_install_mlflow | bool
+
+- name: Create MLflow artifact directory
+  ansible.builtin.file:
+    path: "{{ ml_tools_mlflow_artifact_dir }}"
+    state: directory
+    mode: '0755'
+  when: ml_tools_install_mlflow | bool
+
+- name: Create ML workspace directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ ml_tools_directories }}"
+  when: ml_tools_create_ml_directories | bool
+
+- name: Create README in ML workspace
+  ansible.builtin.copy:
+    dest: "{{ ml_tools_workspace_root }}/README.md"
+    content: |
+      # ML Workspace
+
+      This workspace is organized as follows:
+
+      - `configs/` - Configuration files for experiments
+      - `datasets/` - Raw and processed datasets
+      - `models/` - Trained model artifacts
+      - `experiments/` - Experiment tracking and results
+      - `scripts/` - Utility scripts and preprocessing code
+      - `notebooks/` - Jupyter notebooks for exploration and analysis
+
+      ## Tools Available
+
+      {% if ml_tools_install_mlflow %}- MLflow: Experiment tracking (mlruns stored in {{ ml_tools_mlflow_tracking_dir }}){% endif %}
+      {% if ml_tools_install_dvc %}- DVC: Data version control{% endif %}
+      {% if ml_tools_install_wandb %}- W&B: Weights & Biases for experiment tracking{% endif %}
+      {% if ml_tools_install_tensorboard %}- TensorBoard: Visualization tool{% endif %}
+      {% if ml_tools_install_optuna %}- Optuna: Hyperparameter optimization{% endif %}
+
+      ## Quick Start
+
+      1. Create a virtual environment: `python -m venv venv`
+      2. Activate it: `source venv/bin/activate`
+      3. Start JupyterLab: `jupyter-lab`
+      4. Initialize DVC (if needed): `dvc init`
+      5. Start MLflow UI: `mlflow ui`
+    mode: '0644'
+    force: false
+  when: ml_tools_create_ml_directories | bool

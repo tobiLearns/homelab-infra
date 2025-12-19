@@ -1,0 +1,28 @@
+---
+# Experiment tracking tools
+ml_tools_install_mlflow: true
+ml_tools_install_tensorboard: true
+ml_tools_install_wandb: true
+ml_tools_install_dvc: true
+
+# Hyperparameter optimization
+ml_tools_install_optuna: true
+ml_tools_install_ray: false  # Ray can be heavy, disabled by default
+
+# Data validation
+ml_tools_install_data_validation: true
+
+# Profiling and debugging
+ml_tools_install_profiling_tools: true
+
+# Workspace directories
+ml_tools_create_ml_directories: true
+ml_tools_workspace_root: "{{ ansible_env.HOME }}/ml-workspace"
+
+# DVC configuration
+ml_tools_dvc_cache_dir: "{{ ansible_env.HOME }}/.dvc/cache"
+ml_tools_dvc_remote_storage: []  # List of remote storage configs
+
+# MLflow configuration
+ml_tools_mlflow_tracking_dir: "{{ ansible_env.HOME }}/mlruns"
+ml_tools_mlflow_artifact_dir: "{{ ansible_env.HOME }}/mlartifacts"
