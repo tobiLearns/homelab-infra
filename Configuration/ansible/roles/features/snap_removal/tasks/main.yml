@@ -1,0 +1,80 @@
+---
+# Role: snap_removal
+# Tasks extracted from the playbook to remove snap and add alternative repos
+- name: Check if snap command exists
+  command: which snap
+  register: snap_removal_snap_exists
+  changed_when: false
+  failed_when: false
+
+- name: Get list of snap packages
+  command: snap list
+  register: snap_removal_snap_list_result
+  changed_when: false
+  failed_when: false
+  when: snap_removal_snap_exists.rc == 0
+
+- name: Remove all snap packages
+  command: snap remove --purge {{ item }}
+  loop: "{{ snap_removal_snap_list_result.stdout_lines[1:] | map('split') | map('first') | list }}"
+  register: snap_removal_remove_result
+  changed_when: "'removed' in snap_removal_remove_result.stdout | default('')"
+  failed_when: false
+  when:
+    - snap_removal_snap_exists.rc == 0
+    - snap_removal_snap_list_result.stdout_lines | length > 1
+
+- name: Remove snapd completely
+  apt:
+    name:
+      - snapd
+      - gnome-software-plugin-snap
+    state: absent
+    purge: true
+  register: snap_removal_snapd_result
+  failed_when: "snap_removal_snapd_result is failed and 'Unable to locate package' not in snap_removal_snapd_result.msg | default('')"
+
+- name: Remove snap directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /snap
+    - /var/snap
+    - /var/lib/snapd
+    - /var/cache/snapd
+    - /usr/lib/snapd
+  register: snap_removal_dir_result
+  failed_when: "snap_removal_dir_result is failed and 'does not exist' not in snap_removal_dir_result.msg | default('')"
+
+- name: Hold snapd package (prevent reinstall)
+  dpkg_selections:
+    name: snapd
+    selection: hold
+  register: snap_removal_hold_result
+  failed_when: "snap_removal_hold_result is failed and 'unknown' not in snap_removal_hold_result.msg | default('')"
+
+- name: Add Mozilla Team PPA (native Firefox alternative to snap)
+  apt_repository:
+    repo: ppa:mozillateam/ppa
+    state: present
+
+- name: Set Firefox PPA priority
+  copy:
+    dest: /etc/apt/preferences.d/mozilla-firefox
+    content: |
+      Package: *
+      Pin: release o=LP-PPA-mozillateam
+      Pin-Priority: 1001
+    mode: '0644'
+
+- name: Configure unattended upgrades for Firefox
+  copy:
+    dest: /etc/apt/apt.conf.d/51unattended-upgrades-firefox
+    content: |
+      Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:${distro_codename}";
+    mode: '0644'
+
+- name: Update apt cache after adding PPAs
+  apt:
+    update_cache: true

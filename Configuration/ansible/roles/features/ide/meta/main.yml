@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: Install and configure IDEs (VS Code, IntelliJ)
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []

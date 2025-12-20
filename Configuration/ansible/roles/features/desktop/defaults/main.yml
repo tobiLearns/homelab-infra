@@ -1,0 +1,11 @@
+---
+# Desktop defaults
+desktop_packages:
+  - xfce4
+  - xfce4-goodies
+  - xfce4-terminal
+  - lightdm
+  - firefox
+  - thunar
+  - mousepad
+  - gnome-themes-extra

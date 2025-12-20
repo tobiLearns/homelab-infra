@@ -1,0 +1,10 @@
+---
+# Default variables for git role
+git_packages:
+  - git
+  - git-lfs
+  - gitk
+  - meld
+
+# Do NOT store secrets here. Provide `git_user_name` and `git_user_email`
+# via a local, uncommitted file `vars/secrets.yml` (see README).

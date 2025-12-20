@@ -1,0 +1,181 @@
+---
+# devops-workstation-playbook
+
+- name: Setup DevOps Workstation
+  hosts: all
+  become: true
+  # Collections: Specifies which Ansible collection namespaces to search for modules.
+  # By declaring ansible.builtin here, we can use short module names (e.g., "apt:")
+  # instead of full names (e.g., "ansible.builtin.apt:") throughout the playbook.
+  collections:
+    - ansible.builtin
+
+  vars:
+    user_home: "/home/{{ workstation_user }}"
+
+    # IDE Configuration
+    install_intellij: true
+    install_vscode: true
+    intellij_version: "2024.2.4"
+
+    # VNC Configuration (Backup-Zugriff)
+    enable_vnc: true
+
+  tasks:
+    - name: Load local secrets (optional)
+      include_vars:
+        file: vars/secrets.yml
+
+    # ============================================
+    # 1. SYSTEM BASICS
+    # ============================================
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    # ============================================
+    # SNAP REMOVAL & ALTERNATIVE REPOS (moved to role)
+    # (Can be removed as a block if snap is desired)
+    # ============================================
+    - name: Remove snap and configure PPAs
+      import_role:
+        name: snap_removal
+    # ============================================
+
+    - name: Install essential packages
+      apt:
+        name:
+          - build-essential
+          - curl
+          - wget
+          - git
+          - vim
+          - tmux
+          - htop
+          - tree
+          - jq
+          - unzip
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - software-properties-common
+        state: present
+
+    - name: Install additional CLI tools
+      apt:
+        name:
+          - ncdu         # Disk usage analyzer
+          - ripgrep      # Better grep
+          - fd-find      # Better find
+          - bat          # Better cat
+          - net-tools    # ifconfig, netstat
+          - dnsutils     # dig, nslookup
+          - iputils-ping
+        state: present
+
+    - name: Install libguestfs-tools to be able to run build-script for VM_templates
+      apt:
+        name:
+          - libguestfs-tools
+        state: present
+
+    - name: Set memlock limits for better application compatibility
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "{{ item }}"
+        create: true
+        mode: '0644'
+      loop:
+        - "* soft memlock unlimited"
+        - "* hard memlock unlimited"
+
+
+    # ============================================
+    # 2. DESKTOP ENVIRONMENT (XFCE)
+    # ============================================
+    - name: Install Desktop (XFCE) and configure
+      import_role:
+        name: desktop
+
+    - name: Install and configure VNC server
+      import_role:
+        name: vnc
+
+    # ============================================
+    # 3. GIT & VERSION CONTROL
+    # ============================================
+    - name: Apply Git role
+      import_role:
+        name: git
+
+    # ============================================
+    # 4. IaC TOOLS (Terraform & Ansible)
+    # ============================================
+    - name: Apply IaC Tools role
+      import_role:
+        name: iac_tools
+
+    # ============================================
+    # 5. DOCKER
+    # ============================================
+    - name: Install Docker
+      import_role:
+        name: docker
+
+    # ============================================
+    # 6. KUBERNETES CLI TOOLS
+    # ============================================
+    - name: Install Kubernetes CLI tools
+      import_role:
+        name: kubernetes
+
+    # ============================================
+    # 7. IDEs
+    # ============================================
+    - name: Install IDEs (VS Code, IntelliJ)
+      import_role:
+        name: ide
+
+    # ============================================
+    # 8. USER CONFIGURATION
+    # ============================================
+    - name: Apply user configuration (workspace, aliases, dotfiles)
+      import_role:
+        name: user_config
+
+    # Desktop XFCE user config is handled by the `desktop` role
+
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg: |
+          ============================================
+          ✅ DevOps Workstation Setup Complete!
+          ============================================
+
+          Installed:
+          - Desktop: XFCE (via Proxmox Console)
+          - IDEs: IntelliJ IDEA, VS Code
+          - IaC: Terraform, Ansible
+          - Container: Docker
+          - K8s CLI: kubectl, helm, k9s
+          - Git: Configured
+
+          VNC Access (backup):
+          - Port: 5901
+          - Password: {{ vnc_password }}
+          - Command: vncviewer <vm-ip>:5901
+
+          Workspace: ~/workspace/
+
+          Next steps:
+          1. Reboot: sudo reboot
+          2. Login to XFCE desktop
+          3. Clone your repos to ~/workspace/
+          4. Start coding!
+
+          To connect to Kubernetes cluster later:
+          - Copy kubeconfig: scp k8s-master:/etc/rancher/k3s/k3s.yaml ~/.kube/config
+          - Test: kubectl get nodes
+          ============================================

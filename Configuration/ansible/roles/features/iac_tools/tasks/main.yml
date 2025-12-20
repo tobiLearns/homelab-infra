@@ -1,0 +1,30 @@
+---
+# tasks file for iac_tools role
+# Install and configure Terraform and Ansible
+
+- name: Add HashiCorp GPG key
+  apt_key:
+    url: https://apt.releases.hashicorp.com/gpg
+    state: present
+
+- name: Add HashiCorp repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    state: present
+    filename: hashicorp
+
+- name: Install Terraform
+  apt:
+    name: terraform
+    state: present
+    update_cache: true
+
+- name: Install Python for Ansible
+  apt:
+    name: "{{ iac_tools_python_packages }}"
+    state: present
+
+- name: Install Ansible via pip
+  pip:
+    name: "{{ iac_tools_ansible_packages }}"
+    executable: pip3

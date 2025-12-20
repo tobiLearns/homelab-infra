@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: Role to install and configure Terraform and Ansible (IaC tools)
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []

@@ -1,0 +1,57 @@
+---
+- name: Create workspace directories
+  file:
+    path: "{{ user_home }}/{{ item }}"
+    state: directory
+    owner: "{{ workstation_user }}"
+    mode: '0755'
+  loop: "{{ user_config_workspace_subdirs }}"
+
+- name: Configure bash aliases
+  blockinfile:
+    path: "{{ user_home }}/.bashrc"
+    block: |
+      # DevOps aliases
+      alias tf='terraform'
+      alias tfp='terraform plan'
+      alias tfa='terraform apply'
+      alias tfd='terraform destroy'
+      alias k='kubectl'
+      alias kgp='kubectl get pods'
+      alias kgs='kubectl get svc'
+      alias d='docker'
+      alias dc='docker compose'
+      alias ll='ls -lah'
+      alias gs='git status'
+
+      # Colored prompt
+      export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    marker: "# {mark} ANSIBLE MANAGED"
+    create: true
+    mode: '0644'
+    owner: "{{ workstation_user }}"
+
+- name: Configure vim
+  copy:
+    dest: "{{ user_home }}/.vimrc"
+    content: |
+      set number
+      set expandtab
+      set tabstop=2
+      set shiftwidth=2
+      syntax on
+      set background=dark
+    owner: "{{ workstation_user }}"
+    mode: '0644'
+
+- name: Configure tmux
+  copy:
+    dest: "{{ user_home }}/.tmux.conf"
+    content: |
+      set -g mouse on
+      set -g base-index 1
+      setw -g pane-base-index 1
+      bind | split-window -h
+      bind - split-window -v
+    owner: "{{ workstation_user }}"
+    mode: '0644'

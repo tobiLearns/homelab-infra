@@ -1,0 +1,4 @@
+---
+# Defaults for user_config role
+user_config_workspace_subdirs:
+  - workspace
