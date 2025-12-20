@@ -74,6 +74,12 @@
           - iputils-ping
         state: present
 
+    - name: Install libguestfs-tools to be able to run build-script for VM_templates
+      apt:
+        name:
+          - libguestfs-tools
+        state: present
+
     - name: Set memlock limits for better application compatibility
       lineinfile:
         path: /etc/security/limits.conf
