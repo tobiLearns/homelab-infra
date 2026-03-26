@@ -1,17 +1,8 @@
-# HomeLabIaC_DevOps-VM
+# Homelab Infrastructure
 
-# DevOps VM Infrastructure
+This repository defines infrastructure components, which can be deployed on a Proxmox host.
+Deployment of VMs is realized with terraform by cloning a VM from a prepared VM-template.
+Configuration of the VM is realized with Ansible.
 
-Terraform configuration to create a DevOps workstation VM on Proxmox.
-
-### Requirements
-- Proxmox API credentials
-- A cloud-init-enabled template
-- SSH key pair available in `~/.ssh/id_ed25519.pub`
-
-### Usage
-```bash
-cd terraform
-terraform init
-terraform plan
-terraform apply
+Next step will be to restructure the repo to obtain a better reusability of certain modules 
+and to organize code for different types of VMs and LXCs.
