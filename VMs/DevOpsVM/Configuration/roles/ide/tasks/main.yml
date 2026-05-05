@@ -1,16 +1,35 @@
 ---
 # Install VS Code when `install_vscode` is true
-- name: Add Microsoft GPG key
-  apt_key:
+- name: Remove conflicting VS Code apt source files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/vscode.list
+    - /usr/share/keyrings/microsoft.gpg
+    - /usr/share/keyrings/microsoft-archive-keyring.gpg
+  become: true
+  when: install_vscode
+
+- name: Download Microsoft GPG key (armored)
+  get_url:
     url: https://packages.microsoft.com/keys/microsoft.asc
-    state: present
+    dest: /tmp/microsoft.asc
+    mode: '0644'
+  become: true
+  when: install_vscode
+
+- name: Dearmor Microsoft GPG key
+  shell: gpg --dearmor --yes -o /etc/apt/keyrings/microsoft.gpg /tmp/microsoft.asc
+  become: true
   when: install_vscode
 
 - name: Add VS Code repository
   apt_repository:
-    repo: "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
     state: present
     filename: vscode
+  become: true
   when: install_vscode
 
 - name: Install VS Code

@@ -3,15 +3,18 @@
 # Install and configure Terraform and Ansible
 
 - name: Add HashiCorp GPG key
-  apt_key:
+  get_url:
     url: https://apt.releases.hashicorp.com/gpg
-    state: present
+    dest: /etc/apt/keyrings/hashicorp.asc
+    mode: '0644'
+  become: true
 
 - name: Add HashiCorp repository
   apt_repository:
-    repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/hashicorp.asc] https://apt.releases.hashicorp.com {{ 'noble' if ansible_distribution_release == 'resolute' else ansible_distribution_release }} main"
     state: present
     filename: hashicorp
+  become: true
 
 - name: Install Terraform
   apt:
@@ -23,8 +26,11 @@
   apt:
     name: "{{ iac_tools_python_packages }}"
     state: present
+  become: true
 
-- name: Install Ansible via pip
-  pip:
+- name: Install Ansible via apt
+  apt:
     name: "{{ iac_tools_ansible_packages }}"
-    executable: pip3
+    state: present
+  become: true
+

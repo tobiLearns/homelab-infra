@@ -54,17 +54,36 @@
   register: snap_removal_hold_result
   failed_when: "snap_removal_hold_result is failed and 'unknown' not in snap_removal_hold_result.msg | default('')"
 
-- name: Add Mozilla Team PPA (native Firefox alternative to snap)
-  apt_repository:
-    repo: ppa:mozillateam/ppa
-    state: present
 
-- name: Set Firefox PPA priority
+- name: Create keyring directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Mozilla APT signing key (armored)
+  get_url:
+    url: https://packages.mozilla.org/apt/repo-signing-key.gpg
+    dest: /tmp/packages.mozilla.org.gpg.asc
+    mode: '0644'
+
+- name: Dearmor Mozilla APT signing key
+  shell: gpg --dearmor --yes -o /etc/apt/keyrings/packages.mozilla.org.gpg /tmp/packages.mozilla.org.gpg.asc
+
+- name: Add Mozilla APT Repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.gpg] https://packages.mozilla.org/apt mozilla main"
+    filename: mozilla
+    state: present
+    update_cache: yes
+
+
+- name: Set Firefox APT priority for official Mozilla repo
   copy:
-    dest: /etc/apt/preferences.d/mozilla-firefox
+    dest: /etc/apt/preferences.d/mozilla
     content: |
       Package: *
-      Pin: release o=LP-PPA-mozillateam
+      Pin: origin packages.mozilla.org
       Pin-Priority: 1001
     mode: '0644'
 

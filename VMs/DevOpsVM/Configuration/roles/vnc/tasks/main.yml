@@ -15,24 +15,14 @@
     mode: '0755'
   when: enable_vnc
 
-- name: Generate VNC password hash
-  command: vncpasswd -f
-  args:
-    stdin: "{{ vnc_password }}"
-  register: vnc_password_hash
+- name: Generate and set VNC password file
+  shell: |
+    echo "{{ vnc_password }}" | vncpasswd -f > "{{ user_home }}/.vnc/passwd"
+    chmod 0600 "{{ user_home }}/.vnc/passwd"
+  become: true
+  become_user: "{{ workstation_user }}"
   changed_when: false
-  become: true
-  become_user: "{{ workstation_user }}"
-  when: enable_vnc
-
-- name: Set VNC password file
-  copy:
-    content: "{{ vnc_password_hash.stdout }}"
-    dest: "{{ user_home }}/.vnc/passwd"
-    mode: '0600'
-    owner: "{{ workstation_user }}"
-  become: true
-  become_user: "{{ workstation_user }}"
+  no_log: true
   when: enable_vnc
 
 - name: Create VNC xstartup

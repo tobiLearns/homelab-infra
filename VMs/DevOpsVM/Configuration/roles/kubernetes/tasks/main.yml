@@ -1,14 +1,23 @@
 ---
 - name: Add Kubernetes GPG key
-  apt_key:
-    url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
-    state: present
+  get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key
+    dest: /tmp/kubernetes.asc
+    mode: '0644'
+  become: true
+
+- name: Dearmor Kubernetes GPG key
+  shell: gpg --dearmor < /tmp/kubernetes.asc > /etc/apt/keyrings/kubernetes.gpg
+  args:
+    creates: /etc/apt/keyrings/kubernetes.gpg
+  become: true
 
 - name: Add Kubernetes repository
   apt_repository:
-    repo: "deb https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /"
     state: present
     filename: kubernetes
+  become: true
 
 - name: Install kubectl
   apt:
