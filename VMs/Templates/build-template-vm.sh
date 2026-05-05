@@ -8,11 +8,11 @@ set -e  # Exit on error
 PROXMOX_HOST="proxmox"
 PROXMOX_USER="root"
 VM_ID=999
-TEMPLATE_NAME="template-vm-ubuntu-2204-script"
-STORAGE="local-lvm"
+TEMPLATE_NAME="template-vm-ubuntu-2604"
+STORAGE="local-zfs"
 IMAGE_CACHE_DIR="${HOME}/.cache/proxmox-templates"
 
-IMAGE_URL="https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+IMAGE_URL="https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-amd64.img"
 IMAGE_FILE="ubuntu-cloud.img"
 IMAGE_PATH="${IMAGE_CACHE_DIR}/${IMAGE_FILE}"
 WORK_IMAGE="${IMAGE_CACHE_DIR}/${TEMPLATE_NAME}-work.img"
@@ -128,16 +128,15 @@ qm importdisk ${VM_ID} /tmp/${IMAGE_FILE} ${STORAGE}
 
 # Configure disk
 qm set ${VM_ID} \
-  --scsihw virtio-scsi-pci \
-  --scsi0 ${STORAGE}:vm-${VM_ID}-disk-0,ssd=1,discard=on
+  --scsihw virtio-scsi-single \
+  --scsi0 ${STORAGE}:vm-${VM_ID}-disk-0,ssd=1,discard=on,iothread=1
 
 # Add Cloud-Init drive
 qm set ${VM_ID} --ide2 ${STORAGE}:cloudinit
 
 # Boot configuration
 qm set ${VM_ID} \
-  --boot c \
-  --bootdisk scsi0 \
+  --boot order=scsi0 \
   --serial0 socket \
   --vga serial0
 
