@@ -3,7 +3,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "~> 0.70"
+      version = "~> 0.105"
     }
   }
 }
@@ -27,22 +27,28 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   count = var.vm_count
   
   # Basic-Configuration
-  name        = "${var.vm_name}-${count.index + 1}"
+  name        = "${var.vm_name}" #-${count.index + 1}"
   node_name   = var.target_node
-  
+  vm_id        = var.vm_id
+
+
   # Clone template
   clone {
     vm_id = var.template_id  # ID of template-VM in Proxmox
+    #datastore_id = var.storage_pool
     full  = true
   }
   
   # Set to 'true', if the VM shall start automatically after 'terraform apply':
   started = true
   on_boot = false
-  
+  # Set to 'true', if the VM will be used with a desktop environment:
+  tablet_device = true
+
   # Agent
   agent {
     enabled = true
+    trim = true
   }
   
 # These settings will be inherited from the template, but they can be overridden
@@ -59,7 +65,12 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   memory {
     dedicated = var.memory
   }
-  
+
+  # Each disk gets its own controller and its own IOThread,
+  # which reduces latency and improves performance under heavy load.
+  # With 'virtio-scsi' only, the 'iothread = true' in the disk-block will be ignored.
+  scsi_hardware = "virtio-scsi-single"
+
   # Disk (optional - overrides or extends template disk)
   disk {
     datastore_id = var.storage_pool
@@ -115,7 +126,8 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
     }
     
     # Datastore for Cloud-Init disk
-    # datastore_id = "local-lvm"
+    datastore_id = "local-zfs"
+    interface    = "ide2"
   }
   
   # Lifecycle configuration

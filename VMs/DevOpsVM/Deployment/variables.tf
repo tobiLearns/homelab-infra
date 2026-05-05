@@ -84,10 +84,10 @@ variable "disk_size" {
 variable "storage_pool" {
   description = "Name of the storage pool"
   type        = string
-  default     = "local-lvm"
+  default     = "local-zfs"
 }
 
-variable "vmid" {
+variable "vm_id" {
   description = "The ID for the VM in Proxmox (must be unique)"
   type        = number
   default     = 0  # You might want to override this in your tfvars file
