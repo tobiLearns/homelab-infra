@@ -20,6 +20,7 @@
   systemd:
     name: lightdm
     enabled: true
+    daemon_reload: true
 
 - name: Set graphical target as default
   file:

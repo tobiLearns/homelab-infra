@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: tobi
+  description: Full DevOps workstation — desktop + VNC + IDEs + DevOps toolchain + user config
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies:
+  - role: profiles/desktop      # basic → snap_removal, base_packages; desktop; vnc; ide
+  - role: profiles/devops       # basic (de-duped); docker; kubectl; iac_tools; git
+  - role: features/user_config

@@ -69,6 +69,8 @@
 
 - name: Dearmor Mozilla APT signing key
   shell: gpg --dearmor --yes -o /etc/apt/keyrings/packages.mozilla.org.gpg /tmp/packages.mozilla.org.gpg.asc
+  args:
+    creates: /etc/apt/keyrings/packages.mozilla.org.gpg
 
 - name: Add Mozilla APT Repository
   apt_repository:

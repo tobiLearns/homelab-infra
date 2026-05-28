@@ -1,9 +1,7 @@
 ---
 - name: Install VNC Server packages
   apt:
-    name:
-      - tigervnc-standalone-server
-      - tigervnc-common
+    name: "{{ vnc_packages }}"
     state: present
   when: enable_vnc
 
@@ -15,15 +13,21 @@
     mode: '0755'
   when: enable_vnc
 
+- name: Check if VNC password is already configured
+  stat:
+    path: "{{ user_home }}/.vnc/passwd"
+  register: _vnc_passwd_file
+  when: enable_vnc
+
 - name: Generate and set VNC password file
   shell: |
     echo "{{ vnc_password }}" | vncpasswd -f > "{{ user_home }}/.vnc/passwd"
     chmod 0600 "{{ user_home }}/.vnc/passwd"
   become: true
   become_user: "{{ workstation_user }}"
-  changed_when: false
+  changed_when: true
   no_log: true
-  when: enable_vnc
+  when: enable_vnc and not (_vnc_passwd_file.stat.exists | default(false))
 
 - name: Create VNC xstartup
   copy:
@@ -32,10 +36,12 @@
       #!/bin/bash
       unset SESSION_MANAGER
       unset DBUS_SESSION_BUS_ADDRESS
-      exec startxfce4
+      export XKL_XMODMAP_DISABLE=1
+      exec dbus-launch --exit-with-session startxfce4
     owner: "{{ workstation_user }}"
     mode: '0755'
   when: enable_vnc
+  notify: Restart VNC service
 
 - name: Create VNC systemd service file
   copy:

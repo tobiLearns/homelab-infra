@@ -6,4 +6,5 @@ galaxy_info:
   min_ansible_version: "2.9"
 
 dependencies:
+  - role: features/snap_removal   # must run before base_packages (adds Mozilla apt repo)
   - role: features/base_packages

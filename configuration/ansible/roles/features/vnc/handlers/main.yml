@@ -1,0 +1,6 @@
+---
+- name: Restart VNC service
+  systemd:
+    name: "vncserver@{{ vnc_display }}"
+    state: restarted
+  when: enable_vnc
