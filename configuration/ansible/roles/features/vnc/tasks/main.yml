@@ -68,11 +68,9 @@
       WantedBy=multi-user.target
     mode: '0644'
   when: enable_vnc
-
-- name: Reload systemd daemon
-  systemd:
-    daemon_reload: true
-  when: enable_vnc
+  notify:
+    - Reload systemd daemon
+    - Restart VNC service
 
 - name: Enable and start VNC service
   systemd:
