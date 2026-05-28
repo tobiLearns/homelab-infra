@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  author: tobi
+  description: Foundation profile — applied to every host
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies:
+  - role: features/base_packages

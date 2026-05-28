@@ -24,7 +24,7 @@
   tasks:
     - name: Load local secrets (optional)
       include_vars:
-        file: vars/secrets.yml
+        file: ../vars/secrets.yml
 
     # ============================================
     # 1. SYSTEM BASICS
@@ -40,7 +40,7 @@
     # ============================================
     - name: Remove snap and configure PPAs
       import_role:
-        name: snap_removal
+        name: features/snap_removal
     # ============================================
 
     - name: Install essential packages
@@ -90,53 +90,53 @@
     # ============================================
     - name: Install Desktop (XFCE) and configure
       import_role:
-        name: desktop
+        name: features/desktop
 
     - name: Install and configure VNC server
       import_role:
-        name: vnc
+        name: features/vnc
 
     # ============================================
     # 3. GIT & VERSION CONTROL
     # ============================================
     - name: Apply Git role
       import_role:
-        name: git
+        name: features/git
 
     # ============================================
     # 4. IaC TOOLS (Terraform & Ansible)
     # ============================================
     - name: Apply IaC Tools role
       import_role:
-        name: iac_tools
+        name: features/iac_tools
 
     # ============================================
     # 5. DOCKER
     # ============================================
     - name: Install Docker
       import_role:
-        name: docker
+        name: features/docker
 
     # ============================================
     # 6. KUBERNETES CLI TOOLS
     # ============================================
     - name: Install Kubernetes CLI tools
       import_role:
-        name: kubernetes
+        name: features/kubectl
 
     # ============================================
     # 7. IDEs
     # ============================================
     - name: Install IDEs (VS Code, IntelliJ)
       import_role:
-        name: ide
+        name: features/ide
 
     # ============================================
     # 8. USER CONFIGURATION
     # ============================================
     - name: Apply user configuration (workspace, aliases, dotfiles)
       import_role:
-        name: user_config
+        name: features/user_config
 
     # Desktop XFCE user config is handled by the `desktop` role
 

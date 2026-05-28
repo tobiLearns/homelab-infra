@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: Remove snapd and configure Mozilla/Firefox APT repository as replacement
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []
