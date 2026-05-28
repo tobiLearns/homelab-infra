@@ -3,3 +3,8 @@
 vnc_display: 1
 vnc_geometry: "1920x1080"
 vnc_depth: 24
+
+vnc_packages:
+  - tigervnc-standalone-server
+  - tigervnc-common
+  - dbus-x11            # required: provides dbus-launch for XFCE session startup

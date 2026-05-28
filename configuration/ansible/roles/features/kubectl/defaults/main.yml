@@ -1,4 +1,7 @@
 ---
-# Kubernetes CLI tools defaults
-kubernetes_helm_url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-kubernetes_k9s_url: https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
+# WARNING: Helm has no reliable apt package. Pin this version; update to upgrade.
+kubernetes_helm_version: "v3.17.0"
+
+# WARNING: k9s has no apt package. Pin this version explicitly; "latest" is non-reproducible.
+kubernetes_k9s_version: "v0.32.7"
+kubernetes_k9s_url: "https://github.com/derailed/k9s/releases/download/{{ kubernetes_k9s_version }}/k9s_Linux_amd64.tar.gz"

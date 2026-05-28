@@ -21,6 +21,8 @@
 
 - name: Dearmor Microsoft GPG key
   shell: gpg --dearmor --yes -o /etc/apt/keyrings/microsoft.gpg /tmp/microsoft.asc
+  args:
+    creates: /etc/apt/keyrings/microsoft.gpg
   become: true
   when: install_vscode
 
@@ -52,6 +54,8 @@
   when: install_vscode
 
 # Install IntelliJ IDEA when `install_intellij` is true
+# WARNING: JetBrains does not provide an apt repository for IntelliJ IDEA.
+# Installed from JetBrains CDN tarball. Update `intellij_version` in playbook vars to upgrade.
 - name: Create IntelliJ directory
   file:
     path: /opt/intellij
@@ -59,12 +63,18 @@
     mode: '0755'
   when: install_intellij
 
+- name: Check if IntelliJ is already installed
+  stat:
+    path: /opt/intellij/bin/idea.sh
+  register: _intellij_installed
+  when: install_intellij
+
 - name: Download IntelliJ IDEA
   get_url:
     url: "https://download.jetbrains.com/idea/ideaIC-{{ intellij_version }}.tar.gz"
     dest: "/tmp/intellij.tar.gz"
     mode: '0644'
-  when: install_intellij
+  when: install_intellij and not _intellij_installed.stat.exists
 
 - name: Extract IntelliJ
   unarchive:
@@ -73,7 +83,7 @@
     remote_src: true
     extra_opts: [--strip-components=1]
     creates: /opt/intellij/bin/idea.sh
-  when: install_intellij
+  when: install_intellij and not _intellij_installed.stat.exists
 
 - name: Create IntelliJ desktop entry
   copy:

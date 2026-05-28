@@ -1,0 +1,25 @@
+---
+base_packages_essential:
+  - build-essential
+  - curl
+  - wget
+  - git
+  - vim
+  - tmux
+  - htop
+  - tree
+  - jq
+  - unzip
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - software-properties-common
+
+base_packages_cli_tools:
+  - ncdu
+  - ripgrep
+  - fd-find
+  - bat
+  - net-tools
+  - dnsutils
+  - iputils-ping
