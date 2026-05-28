@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: tobi
+  description: ML profile — Docker + optional desktop GUI on top of basic
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies:
+  - role: profiles/basic
+  - role: features/docker
+  - role: features/desktop   # optional: for GUI tooling
+  # add ml-specific feature roles here (e.g. features/cuda, features/jupyter)

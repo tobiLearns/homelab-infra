@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  author: tobi
+  description: Desktop profile — XFCE + VNC + IDEs on top of basic
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies:
+  - role: profiles/basic
+  - role: features/desktop
+  - role: features/vnc
+  - role: features/ide

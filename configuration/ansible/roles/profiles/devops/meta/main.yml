@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  author: tobi
+  description: DevOps profile — Docker + Kubernetes CLI + IaC tools + Git on top of basic
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies:
+  - role: profiles/basic
+  - role: features/docker
+  - role: features/kubectl
+  - role: features/iac_tools
+  - role: features/git
