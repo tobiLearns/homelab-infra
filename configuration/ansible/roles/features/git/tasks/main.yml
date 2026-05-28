@@ -13,7 +13,7 @@
     fail_msg: |
       git_user_name and/or git_user_email are not defined.
       Create a local file 'vars/secrets.yml' containing these variables and
-      ensure it's gitignored. See ConfigureVM/README.md for details.
+      ensure it's gitignored. See vars/secrets.example.yml for the expected format.
 
 - name: Configure Git global settings
   community.general.git_config:

@@ -1,6 +1,4 @@
 ---
-# Role: snap_removal
-# Tasks extracted from the playbook to remove snap and add alternative repos
 - name: Check if snap command exists
   command: which snap
   register: snap_removal_snap_exists
@@ -18,7 +16,7 @@
   command: snap remove --purge {{ item }}
   loop: "{{ snap_removal_snap_list_result.stdout_lines[1:] | map('split') | map('first') | list }}"
   register: snap_removal_remove_result
-  changed_when: "'removed' in snap_removal_remove_result.stdout | default('')"
+  changed_when: snap_removal_remove_result.rc == 0
   failed_when: false
   when:
     - snap_removal_snap_exists.rc == 0
@@ -31,8 +29,6 @@
       - gnome-software-plugin-snap
     state: absent
     purge: true
-  register: snap_removal_snapd_result
-  failed_when: "snap_removal_snapd_result is failed and 'Unable to locate package' not in snap_removal_snapd_result.msg | default('')"
 
 - name: Remove snap directories
   file:
@@ -44,8 +40,6 @@
     - /var/lib/snapd
     - /var/cache/snapd
     - /usr/lib/snapd
-  register: snap_removal_dir_result
-  failed_when: "snap_removal_dir_result is failed and 'does not exist' not in snap_removal_dir_result.msg | default('')"
 
 - name: Hold snapd package (prevent reinstall)
   dpkg_selections:
@@ -77,8 +71,7 @@
     repo: "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.gpg] https://packages.mozilla.org/apt mozilla main"
     filename: mozilla
     state: present
-    update_cache: yes
-
+    update_cache: true
 
 - name: Set Firefox APT priority for official Mozilla repo
   copy:
