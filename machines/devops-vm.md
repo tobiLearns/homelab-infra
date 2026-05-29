@@ -1,12 +1,12 @@
 # devops-vm
 
-|                      |                                         |
-|----------------------|-----------------------------------------|
-| **Environment**      | dev                                     |
-| **IP**               | 10.1.2.164                              |
-| **VM ID**            | 100                                     |
+|                      |                                        |
+|----------------------|----------------------------------------|
+| **Environment**      | dev                                    |
+| **IP**               | see `~/.ssh/config.d/devops-vm`        |
+| **VM ID**            | 100                                    |
 | **Terraform type**   | large (6 cores, 12 GB RAM, 50 GB disk) |
-| **Ansible playbook** | `playbooks/devops.yml`                  |
+| **Ansible playbook** | `playbooks/devops.yml`                 |
 
 ## Ansible profiles applied
 
