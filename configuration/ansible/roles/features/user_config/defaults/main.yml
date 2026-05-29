@@ -1,4 +1,5 @@
 ---
-# Defaults for user_config role
+user_home: "/home/{{ workstation_user }}"
+
 user_config_workspace_subdirs:
   - workspace
