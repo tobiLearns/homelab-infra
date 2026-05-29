@@ -1,0 +1,10 @@
+---
+skip_list:
+  # Roles are intentionally organized in features/ and profiles/ subdirectories.
+  # The path-style naming (e.g. features/docker) is a deliberate project convention.
+  - role-name[path]
+
+  # The collections: keyword is used in the playbook so all ansible.builtin modules
+  # can be referenced by short name. This is intentional for readability.
+  - fqcn[keyword]
+  - fqcn[action-core]

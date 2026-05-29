@@ -1,0 +1,6 @@
+---
+# Machine-specific configuration for the [vms] group.
+# These values override role defaults and are environment-specific choices.
+
+# IntelliJ IDEA version to install (update here when upgrading)
+intellij_version: "2026.1.2"
