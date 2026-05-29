@@ -1,0 +1,33 @@
+---
+- name: Install NFS client packages
+  apt:
+    name: nfs-common
+    state: present
+
+- name: Check if NFS server is reachable
+  wait_for:
+    host: "{{ nfs_server }}"
+    port: 2049
+    timeout: 3
+  register: _nfs_reachable
+  failed_when: false
+  changed_when: false
+
+- name: Create NFS mount point directories
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ workstation_user }}"
+    mode: '0755'
+  loop: "{{ nfs_mounts | selectattr('enabled', 'equalto', true) | list }}"
+
+- name: Configure NFS mounts in fstab
+  mount:
+    src: "{{ item.src }}"
+    path: "{{ item.path }}"
+    fstype: nfs4
+    opts: "{{ item.opts }}"
+    dump: 0
+    passno: 0
+    state: "{{ 'mounted' if not _nfs_reachable.failed else 'present' }}"
+  loop: "{{ nfs_mounts | selectattr('enabled', 'equalto', true) | list }}"

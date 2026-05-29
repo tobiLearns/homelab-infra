@@ -1,0 +1,7 @@
+# Set 'true' for directories, which shall be mounted:
+nfs_mount_root: true
+nfs_mount_music: true
+nfs_mount_documents: true
+nfs_mount_workspace: true
+nfs_mount_dotfiles: true
+nfs_mount_notes: true

@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: Configure NFS4 mounts in fstab for user home directories
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []
