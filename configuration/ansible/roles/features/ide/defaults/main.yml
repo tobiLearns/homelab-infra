@@ -1,7 +1,11 @@
 ---
-# Defaults for IDE role
-# The playbook defines `install_vscode` and `install_intellij` already.
-# Optionally override these per role invocation.
+install_vscode: true
+install_intellij: true
+intellij_version: "2026.1.2"
+# JetBrains merged Community and Ultimate into a single download as of 2026.x.
+# Old pattern: ideaIC-{version}.tar.gz — no longer valid.
+# Verify the current URL at: jetbrains.com/idea/download/other.html
+intellij_download_url: "https://download.jetbrains.com/idea/idea-{{ intellij_version }}.tar.gz"
 
 ide_vscode_extensions:
   - hashicorp.terraform

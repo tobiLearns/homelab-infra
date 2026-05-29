@@ -86,7 +86,7 @@
   copy:
     dest: /etc/apt/apt.conf.d/51unattended-upgrades-firefox
     content: |
-      Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:${distro_codename}";
+      Unattended-Upgrade::Allowed-Origins:: "packages.mozilla.org:mozilla:${distro_codename}";
     mode: '0644'
 
 - name: Update apt cache after adding PPAs

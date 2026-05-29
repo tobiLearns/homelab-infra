@@ -13,9 +13,10 @@
 - name: Set memlock limits for better application compatibility
   lineinfile:
     path: /etc/security/limits.conf
-    line: "{{ item }}"
+    regexp: "^\\* {{ item.type }} memlock"
+    line: "* {{ item.type }} memlock unlimited"
     create: true
     mode: '0644'
   loop:
-    - "* soft memlock unlimited"
-    - "* hard memlock unlimited"
+    - { type: soft }
+    - { type: hard }

@@ -1,5 +1,4 @@
 ---
-# Desktop defaults
 desktop_packages:
   - xfce4
   - xfce4-goodies
@@ -9,3 +8,5 @@ desktop_packages:
   - thunar
   - mousepad
   - gnome-themes-extra
+
+user_home: "/home/{{ workstation_user }}"

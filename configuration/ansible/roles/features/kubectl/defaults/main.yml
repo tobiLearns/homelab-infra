@@ -1,4 +1,6 @@
 ---
+user_home: "/home/{{ workstation_user }}"
+
 # WARNING: Helm has no reliable apt package. Pin this version; update to upgrade.
 kubernetes_helm_version: "v3.17.0"
 

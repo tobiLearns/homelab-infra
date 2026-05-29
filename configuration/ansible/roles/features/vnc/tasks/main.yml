@@ -57,7 +57,7 @@
       Group={{ workstation_user }}
       WorkingDirectory={{ user_home }}
 
-      ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
+      ExecStartPre=-/usr/bin/vncserver -kill :%i
       ExecStart=/usr/bin/vncserver -depth {{ vnc_depth }} -geometry {{ vnc_geometry }} -localhost no :%i
       ExecStop=/usr/bin/vncserver -kill :%i
 

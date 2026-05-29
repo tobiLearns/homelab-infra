@@ -1,6 +1,6 @@
 ---
 - name: Setup DevOps Workstation
-  hosts: all
+  hosts: vms
   become: true
   # Collections: Specifies which Ansible collection namespaces to search for modules.
   # By declaring ansible.builtin here, we can use short module names (e.g., "apt:")
@@ -8,18 +8,13 @@
   collections:
     - ansible.builtin
 
-  vars:
-    user_home: "/home/{{ workstation_user }}"
-
-    # IDE configuration
-    install_intellij: true
-    install_vscode: true
-    intellij_version: "2026.1.2"
-
-    # VNC remote access
-    enable_vnc: true
-
   pre_tasks:
+    - name: Ensure Ansible remote_tmp directory exists for root
+      file:
+        path: /root/.ansible/tmp
+        state: directory
+        mode: '0700'
+
     - name: Check if secrets file exists (on controller)
       stat:
         path: "{{ playbook_dir }}/../vars/secrets.yml"
@@ -47,7 +42,7 @@
 
           Installed:
           - Desktop: XFCE (via Proxmox Console)
-          - IDEs: IntelliJ IDEA, VS Code
+          - IDEs: IntelliJ IDEA {{ intellij_version }}, VS Code
           - IaC: Terraform, Ansible
           - Container: Docker
           - K8s CLI: kubectl, helm, k9s
@@ -55,7 +50,7 @@
 
           VNC Access (backup):
           - Port: 5901
-          - Password: {{ vnc_password }}
+          - Password: see vars/secrets.yml
           - Command: vncviewer <vm-ip>:5901
 
           Workspace: ~/workspace/
