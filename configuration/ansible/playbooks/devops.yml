@@ -27,10 +27,15 @@
         file: "{{ playbook_dir }}/../vars/secrets.yml"
       when: _secrets_file.stat.exists
 
-  # Ansible resolves the full dependency graph of this profile before executing anything,
-  # which guarantees correct ordering and de-duplication across all feature roles.
+  # Ansible resolves the full dependency graph of all listed roles before executing
+  # anything, which guarantees correct ordering and de-duplication across all feature
+  # roles (e.g. profiles/basic is pulled in by both profiles/desktop and profiles/devops
+  # but will only run once).
   roles:
-    - profiles/devops_workstation
+    - profiles/desktop
+    - profiles/devops
+    - features/user_config
+    - features/nfs_mounts
 
   post_tasks:
     - name: Display completion message
