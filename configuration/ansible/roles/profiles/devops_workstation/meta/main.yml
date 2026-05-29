@@ -9,3 +9,4 @@ dependencies:
   - role: profiles/desktop      # basic → snap_removal, base_packages; desktop; vnc; ide
   - role: profiles/devops       # basic (de-duped); docker; kubectl; iac_tools; git
   - role: features/user_config
+  - role: features/nfs_mounts

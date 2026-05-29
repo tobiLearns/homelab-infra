@@ -1,0 +1,36 @@
+---
+nfs_server: "nfs"
+
+# Toggle individual mounts — override these in host_vars or group_vars
+nfs_mount_root: false
+nfs_mount_documents: false
+nfs_mount_music: false
+nfs_mount_dotfiles: false
+nfs_mount_notes: false
+nfs_mount_workspace: false
+
+nfs_mounts:
+  - src: "{{ nfs_server }}:/"
+    path: /mnt/nfs
+    opts: defaults,_netdev,nofail
+    enabled: "{{ nfs_mount_root }}"
+  - src: "{{ nfs_server }}:/home/{{ workstation_user }}/Documents/"
+    path: "/home/{{ workstation_user }}/Documents/"
+    opts: defaults,_netdev,nofail
+    enabled: "{{ nfs_mount_documents }}"
+  - src: "{{ nfs_server }}:/home/{{ workstation_user }}/Music/"
+    path: "/home/{{ workstation_user }}/Music/"
+    opts: defaults,_netdev,nofail
+    enabled: "{{ nfs_mount_music }}"
+  - src: "{{ nfs_server }}:/home/{{ workstation_user }}/dotfiles/"
+    path: "/home/{{ workstation_user }}/dotfiles/"
+    opts: defaults,_netdev,nofail
+    enabled: "{{ nfs_mount_dotfiles }}"
+  - src: "{{ nfs_server }}:/home/{{ workstation_user }}/notes/"
+    path: "/home/{{ workstation_user }}/notes/"
+    opts: defaults,_netdev,nofail
+    enabled: "{{ nfs_mount_notes }}"
+  - src: "{{ nfs_server }}:/home/{{ workstation_user }}/workspace/"
+    path: "/home/{{ workstation_user }}/workspace/"
+    opts: defaults,_netdev,nofail
+    enabled: "{{ nfs_mount_workspace }}"
