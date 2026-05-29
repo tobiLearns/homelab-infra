@@ -20,10 +20,11 @@
   systemd:
     name: lightdm
     enabled: true
+    daemon_reload: true
 
 - name: Set graphical target as default
   file:
-    src: /lib/systemd/system/graphical.target
+    src: /usr/lib/systemd/system/graphical.target
     dest: /etc/systemd/system/default.target
     state: link
     force: true

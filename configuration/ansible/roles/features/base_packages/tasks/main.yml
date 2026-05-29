@@ -1,0 +1,22 @@
+---
+- name: Install essential packages
+  apt:
+    name: "{{ base_packages_essential }}"
+    state: present
+    update_cache: true
+
+- name: Install additional CLI tools
+  apt:
+    name: "{{ base_packages_cli_tools }}"
+    state: present
+
+- name: Set memlock limits for better application compatibility
+  lineinfile:
+    path: /etc/security/limits.conf
+    regexp: "^\\* {{ item.type }} memlock"
+    line: "* {{ item.type }} memlock unlimited"
+    create: true
+    mode: '0644'
+  loop:
+    - { type: soft }
+    - { type: hard }

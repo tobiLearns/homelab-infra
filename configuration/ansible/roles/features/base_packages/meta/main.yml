@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: tobi
+  description: Foundation packages — essential tools and CLI utilities installed on every host
+  license: UNLICENSED
+  min_ansible_version: "2.9"
+
+dependencies: []
